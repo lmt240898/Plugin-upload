@@ -1,0 +1,764 @@
+.boxAlert
+{
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    z-index: 200;
+    display: none;
+}
+.boxAlert .boxAlert_bgOverplay
+{
+    width: 100%;
+    height: 100%;
+    background: rgba(0 0 0 / 50%);
+    z-index: 200;
+}
+.boxAlert .iconAlert
+{
+    font-size: 39px;
+    color: red;
+    position: absolute;
+    top: 10px;
+}
+.boxAlert .boxAlert_messenger
+{
+    position: absolute;
+    width: max-content;
+    height: 200px;
+    padding: 15px 40px;
+    border-radius: 10px;
+    background: white;
+    text-align: center;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.boxAlert .textAlert
+{
+    font-size: 20px;
+    font-weight: bold;
+    color: red;
+}
+.boxAlert .boxBtnAlert
+{
+    position: absolute;
+    bottom: 24px;
+}
+.boxAlert .boxBtnAlert .confirm
+{
+    padding: 10px 15px;
+    background: #1ea3b0;
+    color: white;
+    font-weight: bold;
+    border-radius: 4px;
+    margin: 0px 5px;
+    cursor: pointer;
+}
+.boxAlert .boxBtnAlert .cancel
+{
+    padding: 10px 15px;
+    background: #777777;
+    color: white;
+    font-weight: bold;
+    border-radius: 4px;
+    margin: 0px 5px;
+    cursor: pointer;
+}
+
+
+
+/*=================\ RESIZE =================*/
+.backgound_overplay
+{
+    background-size: cover;
+    background-repeat: no-repeat;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+    opacity: 0.1;
+}
+.namesize_overplay
+{
+    padding: 0px 22px;
+    word-break: break-all;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    transition: 0.3s;
+    font-size: 22px;
+    color: white;
+    justify-content: center;
+    background: rgba(0 0 0 / 40%);
+    opacity: 0;
+    font-weight: bold;
+    z-index: 5;
+}
+.sameParent:hover .namesize_overplay
+{
+    opacity: 1;
+}
+.t24SE .noSelect {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+.t24SE #main_img_crop 
+{
+    display: none;
+}
+.t24SE .boxHidden
+{
+    width: 660px;
+    height: 400px;
+    overflow: hidden;
+    position: relative;
+    background: gainsboro;
+}
+/* width */
+.t24SE .boxIMG::-webkit-scrollbar 
+{
+    width: 10px;
+    height: 10px;
+}
+
+/* Track */
+.t24SE .boxIMG::-webkit-scrollbar-track 
+{
+    background: #f1f1f1; 
+}
+   
+ /* Handle */
+.t24SE .boxIMG::-webkit-scrollbar-thumb 
+{
+    background: #888; 
+}
+/* Handle on hover */
+.t24SE .boxIMG::-webkit-scrollbar-thumb:hover 
+{
+    background: #555; 
+}
+.t24SE .boxIMG
+{
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    position: relative;
+    z-index: 10;
+}
+.t24SE  .overplay_img_crop
+{
+
+    position: absolute;
+    background: black;
+    opacity: 0.7;
+
+}
+
+.t24SE .style_crop_box
+{
+   position: absolute;
+   top: 0;
+   width: 100%;
+   height: 100%;
+   z-index: 200;
+}
+.t24SE  .style_crop_box .wrap
+{
+    position: relative;
+}
+
+.t24SE #inside_img_crop,
+.t24SE #inside_img_canvas
+{
+     position: absolute ;
+     left: 0;
+     top: 0;
+}
+.t24SE .box__crop {
+
+    overflow: hidden;
+    width: 150px;
+    height: 150px;
+    position: absolute;
+    background: none;
+    border: 1px solid #6dacff;
+    z-index: 40;
+    cursor: pointer;
+}
+.t24SE .box__crop  .overide_img
+{
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background: black;
+    opacity: 0;
+}
+.t24SE .box__crop .resizer
+{
+    width: 24px;
+    height: 24px;
+    position: absolute;
+    background: #2371d7;
+    z-index: 50;
+}
+.t24SE .box__crop .ne
+{
+    top: -3px;
+    right: -3px;
+    cursor: ne-resize;
+}
+.t24SE .box__crop .nw
+{
+    top: -3px;
+    left: -3px;
+    cursor:nw-resize;
+}
+.t24SE .box__crop .sw
+{
+    bottom: -3px;
+    left: -3px;
+    cursor: sw-resize;
+}
+.t24SE .box__crop .se
+{
+    bottom: -3px;
+    right: -3px;
+    cursor: se-resize;
+}
+
+
+.t24SE .box__crop .e
+{
+    right: 0;
+    cursor: e-resize;
+    height: 100%;
+    width: 2px;
+}
+
+.t24SE .box__crop .ew
+{
+    left: 0;
+    cursor: ew-resize;
+    height: 100%;
+    width: 2px;
+}
+
+.t24SE .box__crop .n
+{
+    top: 0;
+    cursor: n-resize;
+    width:100%;
+    height: 2px;
+}
+
+.t24SE .box__crop .ns
+{
+    bottom: 0;
+    cursor: ns-resize;
+    width:100%;
+    height: 2px;
+}
+.t24SE .box__crop .ns,
+.t24SE .box__crop .n
+{
+    height: 1px;
+}
+.t24SE .box__crop .e,
+.t24SE .box__crop .ew 
+{
+    width: 1px;
+}
+/*===============\ SINGLE IMAGE ==============*/
+.active_drag
+{
+    border: 1px solid rgb(9, 109, 31) !important;
+}
+.parentImage
+{
+    margin: 10px 0px;
+    width: 100%;
+    height: 170px;
+    border: 1px solid #ddd;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    overflow: hidden;
+}
+.parentImage .box__single_image
+{
+    display: none;
+    position: static;
+    z-index: 3;
+}
+.parentImage .notimage
+{
+    /* display: none; */
+}
+.parentImage img 
+{
+    width: auto;
+    margin: 0 auto;
+    display: block;
+    height: auto;
+    max-width: 300px;
+    object-fit: contain;
+    position: relative;
+    z-index: 3;
+}
+.parentImage .overplay
+{
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 5;
+    background: rgba(0 0 0 / 9%);
+    transition: 0.3s;
+    opacity: 0;
+}
+.parentImage:hover
+{
+    cursor: pointer;
+}
+.parentImage:hover .overplay
+{
+    opacity: 1;
+    cursor: pointer;
+}
+.parentImage:hover .box_icon_upload i
+{
+    color: white;
+}
+.parentImage:hover .box_icon_upload i
+{
+    filter: drop-shadow(0px 1px 0px black);
+}
+.parentImage .box_icon_upload 
+{
+    position: relative;
+    /* z-index: 10; */
+}
+.parentImage .box_icon_upload i
+{
+	display: block;
+    text-align: center;
+    font-size: 34px;
+}
+.parentImage .box_icon_upload .textUpload
+{
+    font-size: 15px;
+    font-weight: bold;
+}
+
+.parentImage .box_alert
+{   
+    display: none;
+    text-align: center;
+}
+.parentImage .box_alert i 
+{
+    font-size: 36px;
+    color: red;
+}
+.parentImage .alert
+{
+    color: red;
+    font-weight: bold;
+    font-size: 15px;
+}
+.parentImage button
+{
+    border: none;
+    padding: 3px 9px;
+    /* border-bottom-left-radius: 8px; */
+    font-size: 22px;
+    position: absolute;
+    /*
+    right: 0;
+    top: 0; */
+    /* background: #ff4700; */
+    color: white;
+    /* filter: drop-shadow(1px 1px 2px black); */
+    z-index: 20;
+    cursor: pointer;
+    width: 38px;
+    height: 38px;
+}
+.parentImage .btnRemove
+{
+    right: 0px;
+    top: -1px;
+    background: #ff4700;
+    
+}
+.parentImage .btnEdit
+{
+    right: 38px;
+    top: 0px;
+    background: #00aeff;
+    height: 37px;
+}
+.parentImage button:hover
+{
+    cursor: pointer;
+}
+.parentImage  .icon__file_pdf
+{
+    height: 80px !important;
+}
+.parentImage  .icon__file_excel
+{
+    height: 80px !important;
+}
+.parentImage  .icon__file_word
+{
+    height: 80px !important;
+}
+.parentImage .textFiles
+{
+    display: inline-block;
+    margin-top: 10px;
+}
+/*===============\ MULTIPLE IMAGE ==============*/
+.Wrap_parent
+{
+    margin: 10px 0px;
+    width: 100%;
+    height: auto;
+    border: 1px solid #ddd;
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    -ms-flex-wrap: wrap;
+    flex-wrap: wrap;
+    overflow: hidden;
+    min-height: 172px;
+}
+.parentImage_Multiple
+{
+    /* width: 164px; */
+    width: 16.667%;
+    padding: 10px;
+}
+.parentImage_Multiple .ChildBorder
+{
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    height: 150px;
+    cursor: pointer;
+}
+.parentImage_Multiple .box__single_image
+{
+    display: none;
+    width: 100%;
+}
+.parentImage_Multiple .notimage
+{
+    /* display: none; */
+    width: 100%;
+}
+.parentImage_Multiple img 
+{
+    margin: 0 auto;
+    display: block;
+    height: 170px;
+    width: 100%;
+    object-fit: cover;
+}
+.parentImage_Multiple .overplay
+{
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 5;
+    background: rgba(0 0 0 / 9%);
+    transition: 0.3s;
+    opacity: 0;
+}
+.parentImage_Multiple:hover
+{
+    cursor: pointer;
+}
+.parentImage_Multiple:hover .overplay
+{
+    opacity: 1;
+    cursor: pointer;
+}
+.parentImage_Multiple:hover .box_icon_upload i
+{
+    color: white;
+}
+.parentImage_Multiple:hover .box_icon_upload i
+{
+    filter: drop-shadow(0px 1px 0px black);
+}
+.parentImage_Multiple .box_icon_upload 
+{
+    position: relative;
+    /* z-index: 10; */
+    padding: 0px 10px;
+}
+.parentImage_Multiple .box_icon_upload i
+{
+    display: block;
+    text-align: center;
+    font-size: 34px;
+    margin-top: 5px;
+}
+.parentImage_Multiple .box_icon_upload .textUpload
+{
+    font-size: 12px;
+    font-weight: bold;
+    display: inline-block;
+    width: 100%;
+    text-align: center;
+    margin-top: 22px;
+}
+
+.parentImage_Multiple .box_alert
+{   
+    display: none;
+    text-align: center;
+}
+.parentImage_Multiple .box_alert i 
+{
+    font-size: 36px;
+    color: red;
+}
+.parentImage_Multiple .alert
+{
+    color: red;
+    font-weight: bold;
+    font-size: 15px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+.parentImage_Multiple button
+{
+    border: none;
+    padding: 3px 9px;
+    font-size: 15px;
+    position: absolute;
+    color: white;
+    /* filter: drop-shadow(1px 1px 2px black); */
+    z-index: 20;
+    cursor: pointer;
+}
+.parentImage_Multiple .btnRemove
+{
+    right: 11px;
+    top: 11px;
+    background: #ff4700;
+}
+.parentImage_Multiple .btnEdit
+{
+    right: 43px;
+    top: 11px;
+    background: #00aeff;
+}
+.parentImage_Multiple button:hover
+{
+    cursor: pointer;
+}
+.parentImage_Multiple  .icon__file_pdf
+{
+    height: 80px !important;
+}
+.parentImage_Multiple  .icon__file_excel
+{
+    height: 80px !important;
+}
+.parentImage_Multiple  .icon__file_word
+{
+    height: 80px !important;
+}
+.parentImage_Multiple .textFiles
+{
+    display: inline-block;
+    margin-top: 10px;
+}
+.parentImage_Multiple
+{
+    position: relative;
+}
+.parentImage_Multiple  > button
+{
+    display: none;
+}
+.parentImage_Multiple:hover  > button
+{
+    display: block;
+}
+.divOverplay
+{
+    position: absolute;
+    width: 100%;
+    text-align: center;
+    background: rgba(0 0 0 / 27%);
+    z-index: 30;
+    display: none;
+    height: 100%;
+}
+.imgOverplay
+{
+    width: 81px;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%,-50%);
+}
+.item_drop img 
+{
+    height: 118px;
+    object-fit: cover;
+}
+
+/*============ MODAL UPLOAD ===========*/
+#modal_upload .modal-header
+{
+    justify-content: normal;
+}
+#modal_upload .modal-header button
+{
+    margin-right: 6px;
+}
+#modal_upload .wrap_img
+{
+    position: relative;
+}
+/* width */
+#modal_upload .wrap_img::-webkit-scrollbar 
+{
+    width: 10px;
+    height: 10px;
+}
+/* Track */
+#modal_upload .wrap_img::-webkit-scrollbar-track 
+{
+    background: #f1f1f1; 
+}
+
+/* Handle */
+#modal_upload .wrap_img::-webkit-scrollbar-thumb 
+{
+    background: #888; 
+}
+/* Handle on hover */
+#modal_upload .wrap_img::-webkit-scrollbar-thumb:hover 
+{
+    background: #555; 
+}
+#modal_upload .image_area {
+position: relative;
+}
+
+#modal_upload img {
+    display: block;
+    max-width: 100%;
+}
+#modal_upload #crs_crop, #crs_rotate_to, #crs_rotate_back
+{
+    font-size: 14px;
+}
+#modal_upload #crs_rotate_back i 
+{
+    transform: scaleX(-1);
+}
+#modal_upload .preview {
+    overflow: hidden;
+    width: 100% !important; 
+    height: 160px;
+    margin: 10px;
+    border: 1px solid red;
+}
+
+#modal_upload .modal-lg{
+    max-width: 1000px !important;
+}
+
+#modal_upload .overlay {
+    position: absolute;
+    bottom: 10px;
+    left: 0;
+    right: 0;
+    background-color: rgba(255, 255, 255, 0.5);
+    overflow: hidden;
+    height: 0;
+    transition: .5s ease;
+    width: 100%;
+}
+button,  button:focus,  button:visited
+{
+    outline: none !important;
+    border: none !important;
+}
+#modal_upload .image_area:hover .overlay {
+    height: 50%;
+    cursor: pointer;
+}
+#modal_upload .overplayIMG
+{
+    position: absolute;
+    left: 0;
+    right: 0;
+    background-color: rgba(255, 255, 255, 0.5);
+    overflow: hidden;
+    height: 0;
+    opacity: 0;
+    transition: .5s ease;
+    width: 100%;
+    height: 100%;
+    z-index: 3000;
+}
+#modal_upload  .text {
+    color: #333;
+    font-size: 20px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+.box_icon_upload p{
+    width: 60%;
+    margin: auto;
+    text-align: center;
+}
