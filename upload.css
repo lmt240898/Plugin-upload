@@ -65,3 +65,6 @@
     font-size: 24px;
     z-index: 10;
 }
+.test {
+    position: absolute;
+}
