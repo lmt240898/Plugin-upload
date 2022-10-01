@@ -149,7 +149,6 @@
                 const files = this.files;
                 if (files.length > 0) {
                     _this.uploadFile(files);
-                    console.log(files[0]);
                 }
             });
         };
