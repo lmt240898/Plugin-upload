@@ -14,7 +14,7 @@
      */
     $.fn.Upload = function(objparams) {
         let selectors = this;
-        
+        const excludeClass = ['fas'];
         // Default parameters
         let defaults = {
             type                : 'single',
@@ -42,8 +42,8 @@
             mess_upload         : 'mess_upload',
             mess_alert          : 'mess_alert',
             item_image          : 'item_image',
-            icon_remove         : 'fas fa-trash-alt',
-            icon_edit           : 'fas fa-pencil-alt',
+            icon_remove         : 'fas fa-trash-alt glyphicon glyphicon-trash',
+            icon_edit           : 'fas fa-pencil-alt glyphicon glyphicon-pencil',
             icon_file           : "ic-file",
             icon_upload         : 'fas fa-cloud-upload-alt',  
             icon_alert          : 'fas fa-exclamation-triangle',
@@ -136,8 +136,11 @@
         // trigger file upload
         single.prototype.triggerClickUpload = function() {
             var _this = this;
-            $(document).on('click', '.' + params.className.detect, function() {
-                $(_this.selector).trigger('click');
+            $(document).on('click', '.' + params.className.detect, function(e) {
+                if (!$(e.target).hasClass('fas')) {
+                    e.stopPropagation();
+                    $(_this.selector).trigger('click');
+                }
             });
 
             console.log(_this.selector.className);
