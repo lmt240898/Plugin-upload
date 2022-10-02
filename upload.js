@@ -412,10 +412,13 @@
                     
                     // Check if overlay already exists
                     let overlay = wrapperImage.querySelector('.crop-overlay');
+                    let cropBox = wrapperImage.querySelector('.crop-box');
                     
                     if (overlay) {
-                        // Toggle overlay visibility if it already exists
-                        overlay.style.display = overlay.style.display === 'none' ? 'block' : 'none';
+                        // Toggle overlay and crop box visibility if they already exist
+                        const isVisible = overlay.style.display !== 'none';
+                        overlay.style.display = isVisible ? 'none' : 'block';
+                        if (cropBox) cropBox.style.display = isVisible ? 'none' : 'block';
                     } else {
                         // Create overlay element
                         overlay = document.createElement('div');
@@ -428,10 +431,158 @@
                         overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
                         overlay.style.zIndex = '10';
                         
-                        // Add overlay to wrapper
+                        // Create crop box
+                        cropBox = document.createElement('div');
+                        cropBox.className = 'crop-box';
+                        cropBox.style.position = 'absolute';
+                        cropBox.style.zIndex = '20';
+                        cropBox.style.border = '2px dashed white';
+                        cropBox.style.boxSizing = 'border-box';
+                        
+                        // Set initial size and position (centered, 50% of image size)
+                        const imgRect = image.getBoundingClientRect();
+                        const initialWidth = Math.min(imgRect.width * 0.5, imgRect.height * 0.5);
+                        const initialHeight = initialWidth;
+                        
+                        cropBox.style.width = initialWidth + 'px';
+                        cropBox.style.height = initialHeight + 'px';
+                        cropBox.style.top = ((imgRect.height / 2 - initialHeight / 2) - 45) + 'px';
+                        cropBox.style.left = (imgRect.width / 2 - initialWidth / 2) + 'px';
+                        
+                        // Set background to match the original image
+                        cropBox.style.backgroundImage = `url(${image.src})`;
+                        cropBox.style.backgroundRepeat = 'no-repeat';
+                        
+                        // Create resize handle
+                        const resizeHandle = document.createElement('div');
+                        resizeHandle.className = 'resize-handle';
+                        resizeHandle.style.position = 'absolute';
+                        resizeHandle.style.width = '10px';
+                        resizeHandle.style.height = '10px';
+                        resizeHandle.style.bottom = '0';
+                        resizeHandle.style.right = '0';
+                        resizeHandle.style.background = 'white';
+                        resizeHandle.style.cursor = 'nwse-resize';
+                        
+                        cropBox.appendChild(resizeHandle);
+                        
+                        // Add elements to wrapper
                         wrapperImage.appendChild(overlay);
+                        wrapperImage.appendChild(cropBox);
+                        
+                        // Initialize background position
+                        updateCropBoxBackground();
+                        
+                        // Initialize drag and resize functionality
+                        initCropBoxInteraction(cropBox, wrapperImage, image);
                     }
                 });
+                
+                // Function to update crop box background position
+                function updateCropBoxBackground() {
+                    const cropBox = wrapperImage.querySelector('.crop-box');
+                    if (!cropBox) return;
+                    
+                    const cropRect = cropBox.getBoundingClientRect();
+                    const imgRect = image.getBoundingClientRect();
+                    const wrapperRect = wrapperImage.getBoundingClientRect();
+                    
+                    const offsetX = cropRect.left - imgRect.left;
+                    const offsetY = cropRect.top - imgRect.top;
+                    
+                    cropBox.style.backgroundPosition = `-${offsetX}px -${offsetY}px`;
+                    cropBox.style.backgroundSize = `${imgRect.width}px ${imgRect.height}px`;
+                }
+                
+                // Function to initialize crop box interaction
+                function initCropBoxInteraction(cropBox, wrapperImage, image) {
+                    let isDragging = false;
+                    let isResizing = false;
+                    let startX, startY;
+                    let startLeft, startTop, startWidth, startHeight;
+                    
+                    // Handle dragging the crop box
+                    cropBox.addEventListener('mousedown', function(e) {
+                        if (e.target.classList.contains('resize-handle')) {
+                            return; // Skip if clicking on resize handle
+                        }
+                        isDragging = true;
+                        startX = e.clientX;
+                        startY = e.clientY;
+                        startLeft = parseInt(window.getComputedStyle(cropBox).left, 10);
+                        startTop = parseInt(window.getComputedStyle(cropBox).top, 10);
+                        e.preventDefault();
+                    });
+                    
+                    // Handle resizing with the resize handle
+                    const resizeHandle = cropBox.querySelector('.resize-handle');
+                    resizeHandle.addEventListener('mousedown', function(e) {
+                        isResizing = true;
+                        startX = e.clientX;
+                        startY = e.clientY;
+                        startWidth = parseInt(window.getComputedStyle(cropBox).width, 10);
+                        startHeight = parseInt(window.getComputedStyle(cropBox).height, 10);
+                        e.stopPropagation();
+                        e.preventDefault();
+                    });
+                    
+                    // Handle mouse movement for both dragging and resizing
+                    document.addEventListener('mousemove', function(e) {
+                        if (isDragging) {
+                            const dx = e.clientX - startX;
+                            const dy = e.clientY - startY;
+                            let newLeft = startLeft + dx;
+                            let newTop = startTop + dy;
+                            
+                            // Constrain within image boundaries
+                            const imgRect = image.getBoundingClientRect();
+                            const cropRect = cropBox.getBoundingClientRect();
+                            const wrapperRect = wrapperImage.getBoundingClientRect();
+                            
+                            const maxLeft = imgRect.width - cropRect.width;
+                            const maxTop = imgRect.height - cropRect.height;
+                            
+                            newLeft = Math.max(0, Math.min(newLeft, maxLeft));
+                            newTop = Math.max(0, Math.min(newTop, maxTop));
+                            
+                            cropBox.style.left = newLeft + 'px';
+                            cropBox.style.top = newTop + 'px';
+                            updateCropBoxBackground();
+                        }
+                        if (isResizing) {
+                            const dx = e.clientX - startX;
+                            const dy = e.clientY - startY;
+                            let newWidth = startWidth + dx;
+                            let newHeight = startHeight + dy;
+                            
+                            // Minimum size constraints
+                            newWidth = Math.max(newWidth, 50);
+                            newHeight = Math.max(newHeight, 50);
+                            
+                            // Maximum size constraints
+                            const imgRect = image.getBoundingClientRect();
+                            const cropLeft = parseInt(cropBox.style.left, 10);
+                            const cropTop = parseInt(cropBox.style.top, 10);
+                            
+                            if (cropLeft + newWidth > imgRect.width) {
+                                newWidth = imgRect.width - cropLeft;
+                            }
+                            if (cropTop + newHeight > imgRect.height) {
+                                newHeight = imgRect.height - cropTop;
+                            }
+                            
+                            cropBox.style.width = newWidth + 'px';
+                            cropBox.style.height = newHeight + 'px';
+                            updateCropBoxBackground();
+                        }
+                    });
+                    
+                    // Handle mouse up to stop dragging or resizing
+                    document.addEventListener('mouseup', function() {
+                        isDragging = false;
+                        isResizing = false;
+                    });
+                }
                 
                 rotateLeftButton.addEventListener('click', function() {
                     console.log('Rotate left button clicked');
