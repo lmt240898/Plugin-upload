@@ -110,6 +110,7 @@
     background-color: #f8f9fa;
 }
 
+/* Button styles */
 .edit-button {
     margin: 0 2px;
     padding: 8px 16px;
@@ -123,6 +124,24 @@
 
 .edit-button:hover {
     background-color: #0056b3;
+}
+
+.edit-button.save-button {
+    background-color: #28a745;
+}
+
+.edit-button.save-button:hover {
+    background-color: #218838;
+}
+
+.edit-button.disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
+.edit-button.disabled:hover {
+    background-color: #6c757d;
 }
 
 .close-button {
@@ -182,9 +201,35 @@
     position: absolute;
     width: 10px;
     height: 10px;
+    background: white;
+    z-index: 30;
+}
+
+/* Position-specific resize handles */
+.resize-handle.top-left {
+    top: 0;
+    left: 0;
+    transform: translate(-50%, -50%);
+    cursor: nwse-resize;
+}
+
+.resize-handle.top-right {
+    top: 0;
+    right: 0;
+    transform: translate(50%, -50%);
+    cursor: nesw-resize;
+}
+
+.resize-handle.bottom-left {
+    bottom: 0;
+    left: 0;
+    transform: translate(-50%, 50%);
+    cursor: nesw-resize;
+}
+
+.resize-handle.bottom-right {
     bottom: 0;
     right: 0;
-    background: white;
+    transform: translate(50%, 50%);
     cursor: nwse-resize;
-    z-index: 30;
 }

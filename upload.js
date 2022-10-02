@@ -331,22 +331,28 @@
                 const buttonContainer = document.createElement('div');
                 buttonContainer.className = modalClassName.button_container;
                 
+                // Create save button
+                const saveButton = document.createElement('button');
+                saveButton.className = `${modalClassName.button} save-button`;
+                saveButton.innerHTML = '<i class="glyphicon glyphicon-floppy-disk"></i> Save';
+                
                 // Create crop button
                 const cropButton = document.createElement('button');
                 cropButton.className = `${modalClassName.button} ${modalClassName.crop_button}`;
-                cropButton.innerHTML = '<i class="glyphicon glyphicon-retweet"></i>'; 
+                cropButton.innerHTML = '<i class="glyphicon glyphicon-retweet"></i> Crop'; 
                 
                 // Create rotate left button
                 const rotateLeftButton = document.createElement('button');
                 rotateLeftButton.className = `${modalClassName.button} ${modalClassName.rotate_left_button}`;
-                rotateLeftButton.innerHTML = '<i class="glyphicon glyphicon-repeat"></i>';
+                rotateLeftButton.innerHTML = '<i class="glyphicon glyphicon-repeat"></i> Rotate Left';
                 
                 // Create rotate right button
                 const rotateRightButton = document.createElement('button');
                 rotateRightButton.className = `${modalClassName.button} ${modalClassName.rotate_right_button}`;
-                rotateRightButton.innerHTML = '<i class="glyphicon glyphicon-refresh"></i>';
+                rotateRightButton.innerHTML = '<i class="glyphicon glyphicon-refresh"></i> Rotate Right';
                 
                 // Add buttons to button container
+                buttonContainer.appendChild(saveButton);
                 buttonContainer.appendChild(cropButton);
                 buttonContainer.appendChild(rotateLeftButton);
                 buttonContainer.appendChild(rotateRightButton);
@@ -392,10 +398,31 @@
                 // Add modal to body
                 document.body.appendChild(modal);
                 
+                // Track crop mode and rotation angle
+                let cropMode = false;
+                let rotationAngle = 0;
+                
                 // Function to open the modal with an image
                 this.openModal = function(imageUrl) {
                     image.src = imageUrl;
                     modal.style.display = 'block';
+                    
+                    // Reset rotation angle and crop mode when opening modal
+                    rotationAngle = 0;
+                    cropMode = false;
+                    image.style.transform = `rotate(${rotationAngle}deg)`;
+                    
+                    // Remove any existing crop elements
+                    const existingOverlay = wrapperImage.querySelector('.crop-overlay');
+                    const existingCropBox = wrapperImage.querySelector('.crop-box');
+                    if (existingOverlay) existingOverlay.remove();
+                    if (existingCropBox) existingCropBox.remove();
+                    
+                    // Enable rotation buttons
+                    rotateLeftButton.disabled = false;
+                    rotateRightButton.disabled = false;
+                    rotateLeftButton.classList.remove('disabled');
+                    rotateRightButton.classList.remove('disabled');
                     
                     // Trigger reflow to ensure the transition works
                     modal.offsetHeight;
@@ -419,6 +446,20 @@
                         const isVisible = overlay.style.display !== 'none';
                         overlay.style.display = isVisible ? 'none' : 'block';
                         if (cropBox) cropBox.style.display = isVisible ? 'none' : 'block';
+                        
+                        // Toggle crop mode and update button states
+                        cropMode = !isVisible;
+                        rotateLeftButton.disabled = cropMode;
+                        rotateRightButton.disabled = cropMode;
+                        
+                        // Add visual indication of disabled state
+                        if (cropMode) {
+                            rotateLeftButton.classList.add('disabled');
+                            rotateRightButton.classList.add('disabled');
+                        } else {
+                            rotateLeftButton.classList.remove('disabled');
+                            rotateRightButton.classList.remove('disabled');
+                        }
                     } else {
                         // Create overlay element
                         overlay = document.createElement('div');
@@ -453,18 +494,30 @@
                         cropBox.style.backgroundImage = `url(${image.src})`;
                         cropBox.style.backgroundRepeat = 'no-repeat';
                         
-                        // Create resize handle
-                        const resizeHandle = document.createElement('div');
-                        resizeHandle.className = 'resize-handle';
-                        resizeHandle.style.position = 'absolute';
-                        resizeHandle.style.width = '10px';
-                        resizeHandle.style.height = '10px';
-                        resizeHandle.style.bottom = '0';
-                        resizeHandle.style.right = '0';
-                        resizeHandle.style.background = 'white';
-                        resizeHandle.style.cursor = 'nwse-resize';
+                        // Create resize handles for all four corners
+                        const cornerPositions = [
+                            { position: 'top-left', cursor: 'nwse-resize', top: '0', left: '0', bottom: 'auto', right: 'auto' },
+                            { position: 'top-right', cursor: 'nesw-resize', top: '0', left: 'auto', bottom: 'auto', right: '0' },
+                            { position: 'bottom-left', cursor: 'nesw-resize', top: 'auto', left: '0', bottom: '0', right: 'auto' },
+                            { position: 'bottom-right', cursor: 'nwse-resize', top: 'auto', left: 'auto', bottom: '0', right: '0' }
+                        ];
                         
-                        cropBox.appendChild(resizeHandle);
+                        cornerPositions.forEach(corner => {
+                            const resizeHandle = document.createElement('div');
+                            resizeHandle.className = `resize-handle ${corner.position}`;
+                            resizeHandle.style.position = 'absolute';
+                            resizeHandle.style.width = '10px';
+                            resizeHandle.style.height = '10px';
+                            resizeHandle.style.background = 'white';
+                            resizeHandle.style.cursor = corner.cursor;
+                            resizeHandle.style.top = corner.top;
+                            resizeHandle.style.left = corner.left;
+                            resizeHandle.style.bottom = corner.bottom;
+                            resizeHandle.style.right = corner.right;
+                            resizeHandle.dataset.position = corner.position;
+                            
+                            cropBox.appendChild(resizeHandle);
+                        });
                         
                         // Add elements to wrapper
                         wrapperImage.appendChild(overlay);
@@ -475,6 +528,13 @@
                         
                         // Initialize drag and resize functionality
                         initCropBoxInteraction(cropBox, wrapperImage, image);
+                        
+                        // Set crop mode and disable rotation buttons
+                        cropMode = true;
+                        rotateLeftButton.disabled = true;
+                        rotateRightButton.disabled = true;
+                        rotateLeftButton.classList.add('disabled');
+                        rotateRightButton.classList.add('disabled');
                     }
                 });
                 
@@ -498,6 +558,7 @@
                 function initCropBoxInteraction(cropBox, wrapperImage, image) {
                     let isDragging = false;
                     let isResizing = false;
+                    let activeHandle = null;
                     let startX, startY;
                     let startLeft, startTop, startWidth, startHeight;
                     
@@ -514,16 +575,21 @@
                         e.preventDefault();
                     });
                     
-                    // Handle resizing with the resize handle
-                    const resizeHandle = cropBox.querySelector('.resize-handle');
-                    resizeHandle.addEventListener('mousedown', function(e) {
-                        isResizing = true;
-                        startX = e.clientX;
-                        startY = e.clientY;
-                        startWidth = parseInt(window.getComputedStyle(cropBox).width, 10);
-                        startHeight = parseInt(window.getComputedStyle(cropBox).height, 10);
-                        e.stopPropagation();
-                        e.preventDefault();
+                    // Handle resizing with resize handles
+                    const resizeHandles = cropBox.querySelectorAll('.resize-handle');
+                    resizeHandles.forEach(handle => {
+                        handle.addEventListener('mousedown', function(e) {
+                            isResizing = true;
+                            activeHandle = handle.dataset.position;
+                            startX = e.clientX;
+                            startY = e.clientY;
+                            startWidth = parseInt(window.getComputedStyle(cropBox).width, 10);
+                            startHeight = parseInt(window.getComputedStyle(cropBox).height, 10);
+                            startLeft = parseInt(window.getComputedStyle(cropBox).left, 10);
+                            startTop = parseInt(window.getComputedStyle(cropBox).top, 10);
+                            e.stopPropagation();
+                            e.preventDefault();
+                        });
                     });
                     
                     // Handle mouse movement for both dragging and resizing
@@ -537,7 +603,6 @@
                             // Constrain within image boundaries
                             const imgRect = image.getBoundingClientRect();
                             const cropRect = cropBox.getBoundingClientRect();
-                            const wrapperRect = wrapperImage.getBoundingClientRect();
                             
                             const maxLeft = imgRect.width - cropRect.width;
                             const maxTop = imgRect.height - cropRect.height;
@@ -549,30 +614,84 @@
                             cropBox.style.top = newTop + 'px';
                             updateCropBoxBackground();
                         }
-                        if (isResizing) {
+                        
+                        if (isResizing && activeHandle) {
                             const dx = e.clientX - startX;
                             const dy = e.clientY - startY;
-                            let newWidth = startWidth + dx;
-                            let newHeight = startHeight + dy;
+                            let newWidth = startWidth;
+                            let newHeight = startHeight;
+                            let newLeft = startLeft;
+                            let newTop = startTop;
+                            
+                            // Handle resizing differently based on which corner is being dragged
+                            switch (activeHandle) {
+                                case 'top-left':
+                                    newWidth = startWidth - dx;
+                                    newHeight = startHeight - dy;
+                                    newLeft = startLeft + dx;
+                                    newTop = startTop + dy;
+                                    break;
+                                case 'top-right':
+                                    newWidth = startWidth + dx;
+                                    newHeight = startHeight - dy;
+                                    newTop = startTop + dy;
+                                    break;
+                                case 'bottom-left':
+                                    newWidth = startWidth - dx;
+                                    newHeight = startHeight + dy;
+                                    newLeft = startLeft + dx;
+                                    break;
+                                case 'bottom-right':
+                                    newWidth = startWidth + dx;
+                                    newHeight = startHeight + dy;
+                                    break;
+                            }
                             
                             // Minimum size constraints
-                            newWidth = Math.max(newWidth, 50);
-                            newHeight = Math.max(newHeight, 50);
-                            
-                            // Maximum size constraints
-                            const imgRect = image.getBoundingClientRect();
-                            const cropLeft = parseInt(cropBox.style.left, 10);
-                            const cropTop = parseInt(cropBox.style.top, 10);
-                            
-                            if (cropLeft + newWidth > imgRect.width) {
-                                newWidth = imgRect.width - cropLeft;
+                            if (newWidth < 50) {
+                                if (activeHandle === 'top-left' || activeHandle === 'bottom-left') {
+                                    newLeft = startLeft + startWidth - 50;
+                                }
+                                newWidth = 50;
                             }
-                            if (cropTop + newHeight > imgRect.height) {
-                                newHeight = imgRect.height - cropTop;
+                            
+                            if (newHeight < 50) {
+                                if (activeHandle === 'top-left' || activeHandle === 'top-right') {
+                                    newTop = startTop + startHeight - 50;
+                                }
+                                newHeight = 50;
+                            }
+                            
+                            // Maximum size and position constraints
+                            const imgRect = image.getBoundingClientRect();
+                            
+                            // Ensure crop box stays within image bounds
+                            if (newLeft < 0) {
+                                if (activeHandle === 'top-left' || activeHandle === 'bottom-left') {
+                                    newWidth = startWidth + startLeft;
+                                }
+                                newLeft = 0;
+                            }
+                            
+                            if (newTop < 0) {
+                                if (activeHandle === 'top-left' || activeHandle === 'top-right') {
+                                    newHeight = startHeight + startTop;
+                                }
+                                newTop = 0;
+                            }
+                            
+                            if (newLeft + newWidth > imgRect.width) {
+                                newWidth = imgRect.width - newLeft;
+                            }
+                            
+                            if (newTop + newHeight > imgRect.height) {
+                                newHeight = imgRect.height - newTop;
                             }
                             
                             cropBox.style.width = newWidth + 'px';
                             cropBox.style.height = newHeight + 'px';
+                            cropBox.style.left = newLeft + 'px';
+                            cropBox.style.top = newTop + 'px';
                             updateCropBoxBackground();
                         }
                     });
@@ -581,17 +700,133 @@
                     document.addEventListener('mouseup', function() {
                         isDragging = false;
                         isResizing = false;
+                        activeHandle = null;
                     });
                 }
                 
+                // Rotate left 90 degrees
                 rotateLeftButton.addEventListener('click', function() {
-                    console.log('Rotate left button clicked');
-                    // Rotate left functionality would be implemented here
+                    if (cropMode) return; // Don't rotate if in crop mode
+                    
+                    rotationAngle -= 90;
+                    if (rotationAngle < 0) rotationAngle += 360;
+                    image.style.transform = `rotate(${rotationAngle}deg)`;
+                    console.log('Rotated left to:', rotationAngle);
                 });
                 
+                // Rotate right 90 degrees
                 rotateRightButton.addEventListener('click', function() {
-                    console.log('Rotate right button clicked');
-                    // Rotate right functionality would be implemented here
+                    if (cropMode) return; // Don't rotate if in crop mode
+                    
+                    rotationAngle += 90;
+                    if (rotationAngle >= 360) rotationAngle -= 360;
+                    image.style.transform = `rotate(${rotationAngle}deg)`;
+                    console.log('Rotated right to:', rotationAngle);
+                });
+                
+                // Save the edited image
+                saveButton.addEventListener('click', function() {
+                    // Create a canvas to draw the edited image
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    
+                    // Get original image dimensions
+                    const originalImage = new Image();
+                    originalImage.src = image.src;
+                    
+                    // Need to ensure image is loaded for canvas operations
+                    originalImage.onload = function() {
+                        let resultWidth, resultHeight;
+                        
+                        // Handle rotation cases where we need to swap dimensions
+                        if (rotationAngle === 90 || rotationAngle === 270) {
+                            resultWidth = originalImage.height;
+                            resultHeight = originalImage.width;
+                        } else {
+                            resultWidth = originalImage.width;
+                            resultHeight = originalImage.height;
+                        }
+                        
+                        // If cropping, calculate dimensions and position
+                        if (cropMode) {
+                            const cropBox = wrapperImage.querySelector('.crop-box');
+                            if (cropBox) {
+                                const imgRect = image.getBoundingClientRect();
+                                const cropRect = cropBox.getBoundingClientRect();
+                                
+                                // Calculate crop dimensions relative to original image
+                                const scaleX = originalImage.width / imgRect.width;
+                                const scaleY = originalImage.height / imgRect.height;
+                                
+                                const cropLeft = (cropRect.left - imgRect.left) * scaleX;
+                                const cropTop = (cropRect.top - imgRect.top) * scaleY;
+                                const cropWidth = cropRect.width * scaleX;
+                                const cropHeight = cropRect.height * scaleY;
+                                
+                                // Set canvas to crop size
+                                canvas.width = cropWidth;
+                                canvas.height = cropHeight;
+                                
+                                // Draw only the cropped portion
+                                ctx.drawImage(
+                                    originalImage, 
+                                    cropLeft, cropTop, cropWidth, cropHeight, 
+                                    0, 0, cropWidth, cropHeight
+                                );
+                            }
+                        }
+                        // If only rotating (no crop)
+                        else if (rotationAngle !== 0) {
+                            canvas.width = resultWidth;
+                            canvas.height = resultHeight;
+                            
+                            // Move to center, rotate, and draw
+                            ctx.translate(canvas.width / 2, canvas.height / 2);
+                            ctx.rotate((rotationAngle * Math.PI) / 180);
+                            
+                            // Draw rotated image
+                            if (rotationAngle === 90 || rotationAngle === 270) {
+                                ctx.drawImage(
+                                    originalImage, 
+                                    -originalImage.height / 2, 
+                                    -originalImage.width / 2,
+                                    originalImage.height,
+                                    originalImage.width
+                                );
+                            } else {
+                                ctx.drawImage(
+                                    originalImage, 
+                                    -originalImage.width / 2, 
+                                    -originalImage.height / 2,
+                                    originalImage.width,
+                                    originalImage.height
+                                );
+                            }
+                        }
+                        // No edits, just copy the original
+                        else {
+                            canvas.width = originalImage.width;
+                            canvas.height = originalImage.height;
+                            ctx.drawImage(originalImage, 0, 0);
+                        }
+                        
+                        // Convert canvas to data URL and update original image
+                        const dataURL = canvas.toDataURL('image/png');
+                        
+                        // Find all item_image instances and update the one that matches our current source
+                        const itemImages = document.querySelectorAll('.' + params.className.item_image);
+                        itemImages.forEach(img => {
+                            if (img.src === originalImage.src) {
+                                img.src = dataURL;
+                            }
+                        });
+                        
+                        // Close the modal
+                        modal.classList.remove('show');
+                        setTimeout(() => {
+                            modal.style.display = 'none';
+                        }, 300);
+                    };
                 });
             }
         }
