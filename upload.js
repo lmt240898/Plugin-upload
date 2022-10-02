@@ -366,10 +366,20 @@
                 const imageContainer = document.createElement('div');
                 imageContainer.className = modalClassName.image_container;
                 
+                // Create wrapper for the image with position relative
+                const wrapperImage = document.createElement('div');
+                wrapperImage.className = 'wrapper-image';
+                wrapperImage.style.position = 'relative';
+                wrapperImage.style.width = 'auto';
+                wrapperImage.style.height = 'auto';
+                
                 // Create image element
                 const image = document.createElement('img');
                 image.className = modalClassName.edit_image;
-                imageContainer.appendChild(image);
+                
+                // Add image to wrapper and wrapper to container
+                wrapperImage.appendChild(image);
+                imageContainer.appendChild(wrapperImage);
                 
                 // Add elements to modal content
                 modalContent.appendChild(closeButton);
@@ -399,7 +409,28 @@
                 // Add event listeners for edit buttons
                 cropButton.addEventListener('click', function() {
                     console.log('Crop button clicked');
-                    // Crop functionality would be implemented here
+                    
+                    // Check if overlay already exists
+                    let overlay = wrapperImage.querySelector('.crop-overlay');
+                    
+                    if (overlay) {
+                        // Toggle overlay visibility if it already exists
+                        overlay.style.display = overlay.style.display === 'none' ? 'block' : 'none';
+                    } else {
+                        // Create overlay element
+                        overlay = document.createElement('div');
+                        overlay.className = 'crop-overlay';
+                        overlay.style.position = 'absolute';
+                        overlay.style.top = '0';
+                        overlay.style.left = '0';
+                        overlay.style.width = '100%';
+                        overlay.style.height = '100%';
+                        overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+                        overlay.style.zIndex = '10';
+                        
+                        // Add overlay to wrapper
+                        wrapperImage.appendChild(overlay);
+                    }
                 });
                 
                 rotateLeftButton.addEventListener('click', function() {
