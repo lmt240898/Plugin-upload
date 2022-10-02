@@ -69,10 +69,8 @@
         // hide input file
         $(selectors).hide();
 
-        // ES6 class replacing the single function and its prototype methods
         class Single {
             constructor(selector) {
-                // set selector for class used
                 this.selector = selector;
                 this.parentSelector = selector.parentElement;
             }
@@ -336,17 +334,17 @@
                 // Create crop button
                 const cropButton = document.createElement('button');
                 cropButton.className = `${modalClassName.button} ${modalClassName.crop_button}`;
-                cropButton.textContent = 'Crop';
+                cropButton.innerHTML = '<i class="glyphicon glyphicon-retweet"></i>'; 
                 
                 // Create rotate left button
                 const rotateLeftButton = document.createElement('button');
                 rotateLeftButton.className = `${modalClassName.button} ${modalClassName.rotate_left_button}`;
-                rotateLeftButton.textContent = 'Rotate Left';
+                rotateLeftButton.innerHTML = '<i class="glyphicon glyphicon-repeat"></i>';
                 
                 // Create rotate right button
                 const rotateRightButton = document.createElement('button');
                 rotateRightButton.className = `${modalClassName.button} ${modalClassName.rotate_right_button}`;
-                rotateRightButton.textContent = 'Rotate Right';
+                rotateRightButton.innerHTML = '<i class="glyphicon glyphicon-refresh"></i>';
                 
                 // Add buttons to button container
                 buttonContainer.appendChild(cropButton);
