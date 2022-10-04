@@ -421,25 +421,14 @@
                 // Create a wrapper for all image boxes
                 this.imageWrapper = document.createElement("DIV");
                 this.imageWrapper.className = "multiple_images_wrapper";
-                this.imageWrapper.style.display = "flex";
-                this.imageWrapper.style.flexWrap = "wrap";
-                this.imageWrapper.style.margin = "-10px"; // Offset the margins of child elements
 
                 // Add wrapper to container
                 $(this.containerImage).append(this.imageWrapper);
 
-                // Calculate how many images can fit in a row based on container width
-                const containerWidth = $(this.containerImage).width();
-                let imagesPerRow = Math.floor(containerWidth / 150);
-                if (imagesPerRow > 4) imagesPerRow = 4;
-                if (imagesPerRow < 1) imagesPerRow = 1;
-
-                const boxWidth = `calc(${100 / imagesPerRow}% - 20px)`;
-
                 // Create a box for each file
                 for (let i = 0; i < this.files.length; i++) {
                     const file = this.files[i];
-                    this.createSingleImageBox(file, boxWidth, i);
+                    this.createSingleImageBox(file, null, i);
                 }
             }
 
@@ -448,17 +437,10 @@
                 // Create box
                 const boxImage = document.createElement("DIV");
                 boxImage.className = params.className.box_image;
-                boxImage.style.margin = "10px";
-                boxImage.style.width = boxWidth;
-                boxImage.style.position = "relative";
-                boxImage.style.boxSizing = "border-box";
 
                 // Create image element
                 const elmImage = document.createElement("img");
                 elmImage.className = params.className.item_image;
-                elmImage.style.width = "100%";
-                elmImage.style.height = "auto";
-                elmImage.style.objectFit = "cover";
 
                 // Create hidden input file for this image
                 const hiddenInput = document.createElement("input");
