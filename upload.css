@@ -316,3 +316,7 @@
 .multiple_init .btn_edit:hover, .multiple_init .btn_remove:hover {
     background-color: rgba(255,255,255,1);
 }
+
+.multiple_images_wrapper {
+    width: 100% !important;
+}

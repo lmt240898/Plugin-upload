@@ -185,6 +185,7 @@
 
                 // add event for drag and drop
                 let getDropare = $(_this.selector).parent('div').find('.' + params.className.detect);
+               
                 $(getDropare).each((key, obj) => {
                     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evtName => {
                         obj.addEventListener(evtName, (e) => e.preventDefault());
@@ -610,6 +611,7 @@
 
                 // add event for drag and drop
                 let getDropare = $(_this.selector).parent('div').find('.' + params.className.detect);
+                console.log(getDropare);
                 $(getDropare).each((key, obj) => {
                     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evtName => {
                         obj.addEventListener(evtName, (e) => e.preventDefault());
@@ -668,10 +670,10 @@
                 this.messageUpload();
                 // call trigger click upload
                 this.triggerClickUpload();
-                // // call trigger drag file
-                // this.triggerDragUpload();
-                // // call trigger drop file
-                // this.triggerDropUpload();
+                // call trigger drag file
+                this.triggerDragUpload();
+                // call trigger drop file
+                this.triggerDropUpload();
                 // // call trigger remove file
                 // this.triggerRemoveFile();
                 // // call trigger edit file
