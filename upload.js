@@ -11,13 +11,15 @@
      * @param {string} objparams.alert_max_images - Error message for maximum images, example: "allow uploading 5 images"
      * @param {number} objparams.max_file_size - Maximum file size allowed in MB, example: 2
      * @param {number} objparams.max_images - Maximum number of images allowed, example: 5
+     * @param {string} objparams.server_url - Server URL for API requests, example: "https://api.example.com"
+     * @param {string} objparams.endpoint_remove - Endpoint for removing images, example: "remove-file"
      */
     $.fn.Upload = function (objparams) {
         const selectors = this;
         // Default parameters
         const defaults = {
             type: 'single',
-            server_url_validate: '',
+            server_url: '',
             allow_ext: [{ ext: 'jpg', mime: 'image/jpeg' }, { ext: 'png', mime: 'image/png' }],
             text_upload: '<p >Drag and drop or select files </p> <p>(.jpg, .png and max size 2mb)</p> ',
             alert_ext: "Invalid file extension",
@@ -26,7 +28,8 @@
             alert_max_images: "Too many images",
             max_file_size: 2,
             max_images: 1,
-            input_name: 'default_file'
+            input_name: 'default_file',
+            endpoint_remove: ''
         };
 
         // Merge provided parameters with defaults
@@ -321,6 +324,8 @@
             constructor(selector) {
                 this.selector = selector;
                 this.parentSelector = selector.parentElement;
+                this.files = [];
+                this.serverImages = [];
             }
 
             // set container function for single
@@ -431,6 +436,11 @@
                     const file = this.files[i];
                     this.createSingleImageBox(file, null, i);
                 }
+                
+                // Re-add server images
+                for (let serverImage of this.serverImages) {
+                    this.createServerImageBox(serverImage.url, serverImage.id);
+                }
             }
 
             // create a single image box
@@ -469,6 +479,58 @@
 
                 // Show image
                 this.showImage(file, elmImage);
+            }
+
+            // Create a box for server images
+            createServerImageBox(imageUrl, imageId) {
+                // Create box
+                const boxImage = document.createElement("DIV");
+                boxImage.className = params.className.box_image;
+
+                // Create image element
+                const elmImage = document.createElement("img");
+                elmImage.className = params.className.item_image;
+                elmImage.src = imageUrl;
+
+                // Add image to box
+                $(boxImage).append(elmImage);
+
+                // Add box to wrapper
+                $(this.imageWrapper).append(boxImage);
+
+                // Create button container
+                const boxButton = document.createElement("DIV");
+                boxButton.className = params.className.box_button;
+
+                // Create edit button
+                const elmSpanEdit = document.createElement("span");
+                elmSpanEdit.className = params.className.btn_edit;
+                const elmButtonEdit = document.createElement("i");
+                elmButtonEdit.className = params.className.icon_edit;
+                $(elmSpanEdit).append(elmButtonEdit);
+
+                // Create remove button with data-id attribute
+                const elmSpanRemove = document.createElement("span");
+                elmSpanRemove.className = params.className.btn_remove;
+                elmSpanRemove.setAttribute('data-id', imageId);
+                
+                const elmButtonRemove = document.createElement("i");
+                elmButtonRemove.className = params.className.icon_remove;
+                $(elmSpanRemove).append(elmButtonRemove);
+
+                // Add direct event handler to remove button
+                const _this = this;
+                $(elmSpanRemove).on('click', function (e) {
+                    e.stopPropagation();
+                    _this.removeImage(this);
+                });
+
+                // Add buttons to container
+                $(boxButton).append(elmSpanEdit);
+                $(boxButton).append(elmSpanRemove);
+
+                // Add container to box
+                $(boxImage).append(boxButton);
             }
 
             // Add edit and remove buttons to a box
@@ -537,46 +599,97 @@
                 const boxImage = $(targetElement).closest('.' + params.className.box_image);
                 if (!boxImage.length) return;
 
-                // Ask for confirmation before deleting
-                Swal.fire({
-                    title: 'Do you want to delete this image?',
-                    type: "warning",
-                    showCancelButton: true,
-                    confirmButtonColor: "#3085d6",
-                    confirmButtonText: "OK"
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        // Find the index attribute from the hidden input
-                        const hiddenInput = boxImage.find('input[type="file"]')[0];
-                        const indexToRemove = hiddenInput ? parseInt(hiddenInput.dataset.index) : -1;
-
-                        // Remove this file from our files array if we have an index
-                        if (indexToRemove >= 0 && this.files) {
-                            this.files = this.files.filter((_, i) => i !== indexToRemove);
-
-                            // If we removed all files, show the message upload
-                            if (this.files.length === 0) {
-                                $(this.containerImage).html('');
-                                this.messageUpload();
-                            } else {
-                                // Remove the box from the DOM
-                                boxImage.remove();
-
-                                // Re-render all images to update indexes
-                                this.createBoxImages();
-                            }
+                // Check if it's a server image (has data-id attribute)
+                const imageId = $(targetElement).data('id');
+                if (imageId) {
+                    // Determine the API endpoint
+                    let apiUrl = params.endpoint_remove;
+                    if (params.server_url) {
+                        if (params.server_url.charAt(params.server_url.length - 1) !== '/') {
+                            apiUrl = params.server_url + '/' + params.endpoint_remove;
                         } else {
-                            // If we can't find the index, just remove the element
-                            boxImage.remove();
-
-                            // Check if there are any images left
-                            const remainingImages = $(this.containerImage).find('.' + params.className.box_image);
-                            if (remainingImages.length === 0) {
-                                this.messageUpload();
-                            }
+                            apiUrl = params.server_url + params.endpoint_remove;
                         }
                     }
-                });
+
+                    // Ask for confirmation before deleting
+                    Swal.fire({
+                        title: 'Do you want to delete this image?',
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#3085d6",
+                        confirmButtonText: "OK"
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Make AJAX request to delete from server
+                            $.ajax({
+                                url: apiUrl,
+                                method: 'POST',
+                                data: { id: imageId },
+                                success: function(response) {
+                                    // Remove from DOM
+                                    boxImage.remove();
+                                    
+                                    // Remove from serverImages array
+                                    _this.serverImages = _this.serverImages.filter(img => img.id !== imageId);
+                                    
+                                    // Check if there are any images left
+                                    const remainingImages = $(_this.containerImage).find('.' + params.className.box_image);
+                                    if (remainingImages.length === 0) {
+                                        _this.messageUpload();
+                                    }
+                                    
+                                    Swal.fire('Deleted!', 'The image has been deleted.', 'success');
+                                },
+                                error: function(xhr, status, error) {
+                                    Swal.fire('Error!', 'Failed to delete image from server.', 'error');
+                                    console.error('Error deleting image:', error);
+                                }
+                            });
+                        }
+                    });
+                } else {
+                    // Handle non-server image removal (existing functionality)
+                    Swal.fire({
+                        title: 'Do you want to delete this image?',
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#3085d6",
+                        confirmButtonText: "OK"
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Find the index attribute from the hidden input
+                            const hiddenInput = boxImage.find('input[type="file"]')[0];
+                            const indexToRemove = hiddenInput ? parseInt(hiddenInput.dataset.index) : -1;
+
+                            // Remove this file from our files array if we have an index
+                            if (indexToRemove >= 0 && this.files) {
+                                this.files = this.files.filter((_, i) => i !== indexToRemove);
+
+                                // If we removed all files, show the message upload
+                                if (this.files.length === 0 && this.serverImages.length === 0) {
+                                    $(this.containerImage).html('');
+                                    this.messageUpload();
+                                } else {
+                                    // Remove the box from the DOM
+                                    boxImage.remove();
+
+                                    // Re-render all images to update indexes
+                                    this.createBoxImages();
+                                }
+                            } else {
+                                // If we can't find the index, just remove the element
+                                boxImage.remove();
+
+                                // Check if there are any images left
+                                const remainingImages = $(this.containerImage).find('.' + params.className.box_image);
+                                if (remainingImages.length === 0) {
+                                    this.messageUpload();
+                                }
+                            }
+                        }
+                    });
+                }
             }
 
             // trigger remove file
@@ -644,22 +757,51 @@
                 });
             }
 
+            // Load existing images from input elements with class 'image-exist'
+            loadExistingImages() {
+                const existingImages = $(this.parentSelector).find('.image-exist');
+                if (existingImages.length === 0) return;
+
+                // Create the wrapper if it doesn't exist yet
+                if (!this.imageWrapper) {
+                    $(this.containerImage).html('');
+                    this.imageWrapper = document.createElement("DIV");
+                    this.imageWrapper.className = "multiple_images_wrapper";
+                    $(this.containerImage).append(this.imageWrapper);
+                }
+
+                // Process each existing image
+                existingImages.each((index, el) => {
+                    const imageUrl = $(el).data('image');
+                    const imageId = $(el).data('id');
+                    
+                    if (imageUrl) {
+                        this.serverImages.push({
+                            id: imageId,
+                            url: imageUrl
+                        });
+                        
+                        // Create box for server image
+                        this.createServerImageBox(imageUrl, imageId);
+                    }
+                });
+            }
+
             // set init function for single
             init() {
                 // create container upload
                 this.container();
                 // create mess explain upload like: "Drag and drop or select files"
                 this.messageUpload();
+                // Load existing images from HTML
+                this.loadExistingImages();
                 // call trigger click upload
                 this.triggerClickUpload();
                 // call trigger drag file
                 this.triggerDragUpload();
                 // call trigger drop file
                 this.triggerDropUpload();
-                // // call trigger remove file
-                // this.triggerRemoveFile();
-                // // call trigger edit file
-                // this.triggerEditFile();
+                // No need to call triggerRemoveFile() and triggerEditFile() since we use direct event binding
             }
         }
 
