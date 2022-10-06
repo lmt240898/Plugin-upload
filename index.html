@@ -12,23 +12,28 @@
     <script  src="upload.js"></script>
 </head>
 <body>
-    <!-- <div>
+    <div>
         <input type="file" class="file-upload">
-    </div> -->
+    </div>
 
     <div>
         <input type="file" class="file-upload-multiple" multiple>
+        <input type="hidden" class="image-exist" data-id="1" data-image="https://www.simplilearn.com/ice9/free_resources_article_thumb/what_is_image_Processing.jpg">
+        <input type="hidden" class="image-exist" data-id="2" data-image="https://www.simplilearn.com/ice9/free_resources_article_thumb/ImageProcessing_1.png">
     </div>
 
     <script>
         $(document).ready(function() {
-            // $('.file-upload').Upload()
+            $('.file-upload').Upload()
             $('.file-upload-multiple').Upload({
                 type: 'multiple',
                 input_name: 'test-multiple',
-                max_images: 6,
-                max_file_size: 4
-            })
+                alert_max_images: 6,
+                max_images_text: 'You can upload a maximum of 6 images',
+                max_file_size: 4,
+                alert_max_file_size: 'File size must be less than 4MB',
+                endpoint_remove: 'remove-file',
+            });
         });
     </script>
 </body>

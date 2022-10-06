@@ -16,7 +16,6 @@
     cursor: pointer;
     overflow: hidden;
     flex-wrap: wrap;
-    justify-content: flex-start;
     gap: 10px;
     padding: 10px;
 }
@@ -326,7 +325,6 @@
     flex-wrap: nowrap;
     overflow-x: auto;
     overflow-y: hidden;
-    padding-bottom: 10px; 
     scrollbar-width: thin;
     -ms-overflow-style: none;
 }
