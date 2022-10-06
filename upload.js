@@ -712,10 +712,8 @@
                         }
                     }
 
-                    // Store reference to this for use in callbacks
                     const _this = this;
 
-                    // Ask for confirmation before deleting
                     Swal.fire({
                         title: 'Do you want to delete this image?',
                         icon: "warning",
