@@ -73,11 +73,18 @@
 
         // hide input file
         $(selectors).hide();
+        
+        // Generate a unique instance ID for each upload instance
+        let instanceCounter = 0;
 
         class Single {
             constructor(selector) {
                 this.selector = selector;
                 this.parentSelector = selector.parentElement;
+                
+                // Add unique instance ID
+                this.instanceId = 'upload_instance_' + (++instanceCounter);
+                $(this.selector).data('instanceId', this.instanceId);
             }
 
             // set container function for single
@@ -85,6 +92,8 @@
                 // create container upload
                 this.containerUpload = document.createElement("DIV");
                 this.containerUpload.classList.add(params.className.container_upload, params.className.detect);
+                // Add unique data attribute
+                this.containerUpload.setAttribute('data-instance-id', this.instanceId);
                 $(this.parentSelector).append(this.containerUpload);
 
                 // create container image
@@ -166,7 +175,7 @@
             // trigger file upload
             triggerClickUpload() {
                 var _this = this;
-                $(document).on('click', '.' + params.className.detect, function (e) {
+                $(document).on('click', `.${params.className.detect}[data-instance-id="${this.instanceId}"]`, function (e) {
                     if (!$(e.target).hasClass('fas')) {
                         e.stopPropagation();
                         $(_this.selector).trigger('click');
@@ -174,7 +183,7 @@
                 });
 
                 // listen file upload
-                $(document).on('change', '.' + _this.selector.className, function () {
+                $(_this.selector).on('change', function () {
                     const files = this.files;
                     if (files.length > 0) {
                         _this.uploadFile(files);
@@ -187,7 +196,7 @@
                 var _this = this;
 
                 // add event for drag and drop
-                let getDropare = $(_this.selector).parent('div').find('.' + params.className.detect);
+                let getDropare = $(`.${params.className.detect}[data-instance-id="${this.instanceId}"]`);
                
                 $(getDropare).each((key, obj) => {
                     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evtName => {
@@ -196,7 +205,7 @@
                 });
 
                 // Drag file and active border
-                $(document).on('dragenter, dragover', '.' + params.className.detect, function (e) {
+                $(document).on('dragenter dragover', `.${params.className.detect}[data-instance-id="${this.instanceId}"]`, function (e) {
                     let __this_dragenter = this;
                     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evtName => {
                         __this_dragenter.addEventListener(evtName, (e) => e.preventDefault());
@@ -206,7 +215,7 @@
                 });
 
                 // Leave file and remove border
-                $(document).on('dragleave', '.' + params.className.detect, function (e) {
+                $(document).on('dragleave', `.${params.className.detect}[data-instance-id="${this.instanceId}"]`, function (e) {
                     let __this_dragleave = this;
                     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evtName => {
                         __this_dragleave.addEventListener(evtName, (e) => e.preventDefault());
@@ -219,7 +228,7 @@
             // trigger drop file
             triggerDropUpload() {
                 var _this = this;
-                $(document).on('drop', '.' + params.className.detect, function (e) {
+                $(document).on('drop', `.${params.className.detect}[data-instance-id="${this.instanceId}"]`, function (e) {
                     e.preventDefault();
                     $(this).removeClass('active_drag');
                     const files = e.originalEvent.dataTransfer.files;
@@ -274,7 +283,7 @@
             // trigger remove file
             triggerRemoveFile() {
                 var _this = this;
-                $(document).on('click', '.' + params.className.btn_remove, function (e) {
+                $(document).on('click', `.${params.className.container_upload}[data-instance-id="${this.instanceId}"] .${params.className.btn_remove}`, function (e) {
                     e.stopPropagation();
                     
                     // Check if there's an ID in the remove button or the image
@@ -314,7 +323,7 @@
                                     data: { id: imageId },
                                     success: function(response) {
                                         // Remove from DOM on success
-                                        $(_this.selector).parent('div').find('.' + params.className.box_image).remove();
+                                        $(`.${params.className.container_upload}[data-instance-id="${_this.instanceId}"] .${params.className.box_image}`).remove();
                                         _this.messageUpload();
                                         
                                         Swal.fire('Deleted!', 'The image has been deleted.', 'success');
@@ -326,7 +335,7 @@
                                 });
                             } else {
                                 // No ID, just remove from DOM (local file)
-                                $(_this.selector).parent('div').find('.' + params.className.box_image).remove();
+                                $(`.${params.className.container_upload}[data-instance-id="${_this.instanceId}"] .${params.className.box_image}`).remove();
                                 _this.messageUpload();
                             }
                         }
@@ -337,7 +346,7 @@
             // trigger edit file
             triggerEditFile() {
                 var _this = this;
-                $(document).on('click', '.' + params.className.btn_edit, function (e) {
+                $(document).on('click', `.${params.className.container_upload}[data-instance-id="${this.instanceId}"] .${params.className.btn_edit}`, function (e) {
                     e.stopPropagation();
                     const imageUrl = $(this).closest('.' + params.className.container_image).find('.' + params.className.item_image).attr('src');
                     common.openModal(imageUrl, _this);
@@ -392,6 +401,10 @@
                 this.parentSelector = selector.parentElement;
                 this.files = [];
                 this.serverImages = [];
+                
+                // Add unique instance ID
+                this.instanceId = 'upload_instance_' + (++instanceCounter);
+                $(this.selector).data('instanceId', this.instanceId);
             }
 
             // set container function for single
@@ -399,6 +412,8 @@
                 // create container upload
                 this.containerUpload = document.createElement("DIV");
                 this.containerUpload.classList.add(params.className.container_upload, params.className.detect);
+                // Add unique data attribute
+                this.containerUpload.setAttribute('data-instance-id', this.instanceId);
                 $(this.parentSelector).append(this.containerUpload);
 
                 // create container image
@@ -427,7 +442,7 @@
             // trigger file upload
             triggerClickUpload() {
                 var _this = this;
-                $(document).on('click', '.' + params.className.detect, function (e) {
+                $(document).on('click', `.${params.className.detect}[data-instance-id="${this.instanceId}"]`, function (e) {
                     if (!$(e.target).hasClass('fas')) {
                         e.stopPropagation();
                         $(_this.selector).trigger('click');
@@ -435,7 +450,7 @@
                 });
 
                 // listen file upload
-                $(document).on('change', '.' + _this.selector.className, function () {
+                $(_this.selector).on('change', function () {
                     const files = this.files;
                     if (files.length > 0) {
                         _this.uploadFile(files);
@@ -804,7 +819,7 @@
             // trigger remove file
             triggerRemoveFile() {
                 const _this = this;
-                $(document).on('click', '.' + params.className.btn_remove, function (e) {
+                $(document).on('click', `.${params.className.container_upload}[data-instance-id="${this.instanceId}"] .${params.className.btn_remove}`, function (e) {
                     e.stopPropagation();
                     _this.removeImage(this);
                 });
@@ -815,7 +830,7 @@
                 var _this = this;
 
                 // add event for drag and drop
-                let getDropare = $(_this.selector).parent('div').find('.' + params.className.detect);
+                let getDropare = $(`.${params.className.detect}[data-instance-id="${this.instanceId}"]`);
                 $(getDropare).each((key, obj) => {
                     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evtName => {
                         obj.addEventListener(evtName, (e) => e.preventDefault());
@@ -823,7 +838,7 @@
                 });
 
                 // Drag file and active border
-                $(document).on('dragenter, dragover', '.' + params.className.detect, function (e) {
+                $(document).on('dragenter dragover', `.${params.className.detect}[data-instance-id="${this.instanceId}"]`, function (e) {
                     let __this_dragenter = this;
                     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evtName => {
                         __this_dragenter.addEventListener(evtName, (e) => e.preventDefault());
@@ -833,7 +848,7 @@
                 });
 
                 // Leave file and remove border
-                $(document).on('dragleave', '.' + params.className.detect, function (e) {
+                $(document).on('dragleave', `.${params.className.detect}[data-instance-id="${this.instanceId}"]`, function (e) {
                     let __this_dragleave = this;
                     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evtName => {
                         __this_dragleave.addEventListener(evtName, (e) => e.preventDefault());
@@ -846,7 +861,7 @@
             // trigger drop file
             triggerDropUpload() {
                 var _this = this;
-                $(document).on('drop', '.' + params.className.detect, function (e) {
+                $(document).on('drop', `.${params.className.detect}[data-instance-id="${this.instanceId}"]`, function (e) {
                     e.preventDefault();
                     $(this).removeClass('active_drag');
                     const files = e.originalEvent.dataTransfer.files;
@@ -859,7 +874,7 @@
             // trigger edit file
             triggerEditFile() {
                 var _this = this;
-                $(document).on('click', '.' + params.className.btn_edit, function (e) {
+                $(document).on('click', `.${params.className.container_upload}[data-instance-id="${this.instanceId}"] .${params.className.btn_edit}`, function (e) {
                     e.stopPropagation();
                     const imageUrl = $(this).closest('.' + params.className.box_image).find('.' + params.className.item_image).attr('src');
                     common.openModal(imageUrl, _this);
