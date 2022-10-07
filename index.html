@@ -14,13 +14,12 @@
 <body>
     <div>
         <input type="file" class="file-upload">
-        <input type="hidden" class="image-exist" data-id="1" data-image="https://www.simplilearn.com/ice9/free_resources_article_thumb/what_is_image_Processing.jpg">
+        <input type="hidden" class="image-exist" >
     </div>
 
     <div>
-        <input type="file" class="file-upload-multiple" multiple>
-        <input type="hidden" class="image-exist" data-id="1" data-image="https://www.simplilearn.com/ice9/free_resources_article_thumb/what_is_image_Processing.jpg">
-        <input type="hidden"  class="image-exist" data-id="1" data-image="https://www.simplilearn.com/ice9/free_resources_article_thumb/what_is_image_Processing.jpg">
+        <input type="file" class="file-upload">
+        <input type="hidden" class="image-exist" >
     </div>
 
     <script>
@@ -31,15 +30,6 @@
                 endpoint_remove: 'remove-file',
             });
         
-            $('.file-upload-multiple').Upload({
-                type: 'multiple',
-                input_name: 'test-multiple',
-                max_images: 3,
-                alert_max_images: 'You can upload a maximum of 3 images',
-                max_file_size: 4,
-                alert_max_file_size: 'File size must be less than 4MB',
-                endpoint_remove: 'remove-file',
-            });
         });
     </script>
 </body>

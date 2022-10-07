@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="upload.css">
+    <script  src="upload.js"></script>
+</head>
+<body>
+    <div>
+        <input type="file" class="file-upload">
+        <input type="hidden" class="image-exist" data-id="1" data-image="https://www.simplilearn.com/ice9/free_resources_article_thumb/what_is_image_Processing.jpg">
+    </div>
+
+    <div>
+        <input type="file" class="file-upload-multiple" multiple>
+        <input type="hidden" class="image-exist" data-id="1" data-image="https://www.simplilearn.com/ice9/free_resources_article_thumb/what_is_image_Processing.jpg">
+        <input type="hidden"  class="image-exist" data-id="1" data-image="https://www.simplilearn.com/ice9/free_resources_article_thumb/what_is_image_Processing.jpg">
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            $('.file-upload').Upload({
+                type: 'single',
+                alert_max_file_size: 'File size must be less than 4MB',
+                endpoint_remove: 'remove-file',
+            });
+        
+            $('.file-upload-multiple').Upload({
+                type: 'multiple',
+                input_name: 'test-multiple',
+                max_images: 3,
+                alert_max_images: 'You can upload a maximum of 3 images',
+                max_file_size: 4,
+                alert_max_file_size: 'File size must be less than 4MB',
+                endpoint_remove: 'remove-file',
+            });
+        });
+    </script>
+</body>
+</html>
