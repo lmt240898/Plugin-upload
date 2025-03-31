@@ -1,0 +1,206 @@
+ LƯU Ý: CÓ THUỘC TÍNH XÁC NHẬN SAU KHI VALIDATE LÀ : 
+                     - data-validate của class parentImage_Multiple (upload nhiều hình)
+                     - data-validate của class parentImage (upload 1 hình)
+                         // DEMO UPLOAD NHIỀU HÌNH 
+//======================= SERVER UPLOAD NODEJS====================
+$(document).ready(function(){
+		setTimeout(function () { 
+			$('.Test').Upload_Multiple({
+                maxImage: 8,
+                classInputFile: "multileImage",
+                inputName: "image_more",                 // input name phải khác
+                urlValidate: "validate-file",
+                inputCountFiles: "input1_count",    // input name cho bộ đếm phải khác
+                defaultValidate: true,
+                textUpload: "(click để tải ảnh hoặc kéo thả vào đây)",
+                allowExtension: [{ ext: "jpg",  mime: "image/jpeg" }, { ext: "png", mime: "image/png" }],
+                alertExtension: "Vui lòng chọn file hình png,jpg",
+                alertMaxsize: "File không vượt quá 2MB",
+                maxSize: 10,
+				languageCode: "nodejs"
+        	});
+		 },1000);
+	
+	});
+// if(req.originalMethod == 'POST')
+// {
+// let countInput1  = req.body.input1_count;
+// let countInput2  = req.body.input2_count;
+// let path         = "uploads/user4/";
+// if (countInput1 == 0) {
+//     return res.status(400).send("No files were uploaded.");
+// } else {
+//         for (let index = 0; index < countInput1; index++) {
+//             if(req.files["image" + index] != undefined)
+//             {
+//             let dataUpload =   await Upload(
+//                                     {
+//                                     file: req.files["image" + index],
+//                                     path: path,
+//                                     width: 300, height: 300, 
+//                                     allowExtension: ["jpeg","jpg","png"],
+//                                     maxSize       : 1
+//                                     }).catch(function (err) {
+//                                         console.log(err);
+//                                 });
+//             console.log(dataUpload);
+//             }
+
+//         }
+//         // // ==============
+//         for (let index2 = 0; index2 < countInput2; index2++) {
+//             if(req.files["image_2" + index2] != undefined)
+//             {
+//                 await Upload(
+//                         {
+//                         file: req.files["image_2" + index2], path_normal: path, path_thumb: path_thumb,
+//                         width: 300, height: 300, 
+//                         allowExtension: ["jpeg","jpg","png"],
+//                         maxSize       : 1
+//                         }).catch(function (err) {
+//                             console.log(err);
+//                     });
+//             }
+
+//         }
+// }
+    
+// }
+===================\ SERVER VALIDATE PHP ===================
+    public function validate_upload()
+    {
+        $alert               = "";
+        $inputFileName       = $_POST['inputFileName'];
+        $allowExtensionEXT   = $_POST['ext'];
+        $allowExtensionMIME  = $_POST['mime'];
+        $alertExtension      = $_POST['alertExtension'];
+        $alertMaxsize        = $_POST['alertMaxsize'];
+        $maxSize             = $_POST['maxSize'];
+        $finfo               = new \finfo(FILEINFO_MIME_TYPE);
+        $detectSize          = $_FILES[$inputFileName]['size'] / 1048576; // chuyển đổi byte thành mb 
+        $convertSize         = round($_FILES[$inputFileName]['size']/1024); // chuyền thành KB
+        $alertSize           = "";
+        if( $convertSize > 1024 )
+        {
+            $alertSize       = round($detectSize) ."MB" ;
+        }else
+        {
+            $alertSize       = round($convertSize) ."KB" ;
+        }
+        //  $allowExtension là array key, value
+        $arrAllowExt         = [];
+        foreach ($allowExtensionEXT as $key => $value) {
+            $arrAllowExt =  array_merge($arrAllowExt,[$value => $allowExtensionMIME[$key]]); 
+        }
+        if (false === array_search($finfo->file($_FILES[$inputFileName]['tmp_name']),$arrAllowExt, true)) {
+            $alert           = $alertExtension;
+            echo json_encode(["type" => "error","alert_mess"=> $alert, "size" =>  $detectSize, "ext"=> $finfo->file($_FILES[$inputFileName]['tmp_name'])]);
+            die;
+        }
+        if ($detectSize > $maxSize) { //10 MB (size is also in bytes)
+            $alert           = $alertMaxsize;
+            echo json_encode(["type" => "error","alert_mess"=> $alert, "size" => $detectSize , "ext"=> $finfo->file($_FILES[$inputFileName]['tmp_name'])]);
+            die;
+        }
+        echo json_encode(["type" => "success","alert_mess"=> $alert, "size" => $alertSize , "ext"=> $finfo->file($_FILES[$inputFileName]['tmp_name'])]);
+    }
+===================================== FRONT END  UPLOAD 1 HÌNH ===========================================
+//========= HTML KHỞI TẠO
+    <div class="form-group">
+        <div class="logo_image">
+            <div>
+                <input type="file" name="image" class="UploadImage"  />
+            </div>
+        </div>
+    </div>
+     <div class="form-group">
+        <div class="logo_image">
+            <div>
+                <input type="file" name="image2" class="UploadImage2"  />
+            </div>
+        </div>
+    </div>
+    // KHI CẬP NHẬT THÌ DÙNG THUỘC TÍNH data-image=""
+     <div class="form-group">
+        <div class="logo_image">
+            <div>
+                <input type="file" name="image" data-image="uploads/images/tenhinh.jpg" class="UploadImage"  />
+            </div>
+        </div>
+    </div>
+//========= JS KHỞI TẠO
+ LƯU Ý: defaultValidate : true là dùng VALIDATE bằng AJAX request tới server
+       $('.UploadImage').Upload_Single(
+        {
+            inputFileName   : "image_main",
+            urlValidate     : "validate-upload",
+            defaultValidate : true,
+            allowExtension  : [{ext: "jpg",mime:"image/jpeg"},{ext: "png",mime:"image/png"}],
+            alertExtension  : "Vui lòng chọn jpg, png",
+            alertMaxsize    : "File không vượt quá 2MB",
+            maxSize         : 2
+        });
+        //============= XOÁ ================
+        $(document).on("click",".btnRemove",function () { 
+            let __this = this;
+            Swal.fire({
+                title: "Bạn có chắc chắn muốn xóa không?",
+                type: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Đồng ý"
+            }).then(function (result) {
+            if (result.value) {
+                let check = $(__this);
+                let inputFile  = $(__this).closest(".parentImage").parent().find("input");
+                inputFile[0].value = "";
+                    $(__this).parent().hide();
+                    $(__this).closest(".parentImage").find(".textFiles").hide();
+                    $(__this).parent().find(".showImg").attr("src","");
+                    $(__this).closest(".parentImage").find(".notimage").show();
+                    $(__this).closest(".parentImage").find(".box_icon_upload").show();
+                    $(__this).closest(".parentImage").parent().find("input").attr("data-image","");
+                }
+            });
+        });
+
+
+===================================== FRONT END  UPLOAD NHIỀU HÌNH ===========================================
+//======= HTML KHỞI TẠO 
+    // KHỞI TẠO KHUNG UPLOAD THỨ 1
+    <div class="form-group">
+        <div  class="Test">
+        </div>
+    </div>
+
+    // KHỞI TẠO KHUNG UPLOAD THỨ 2
+    <div class="form-group">
+        <div  class="Test2">
+        </div>
+    </div>
+//======= JS KHỞI TẠO
+        // KHÔNG VALIDATE =>  defaultValidate : false, DÙNG VALIDATE =>  defaultValidate : true
+         // KHỞI TẠO KHUNG UPLOAD THỨ 1
+         $('.Test').Upload_Multiple({
+            maxImage: 8,
+            classInputFile: "multileImage",
+            inputName: "image",                 // input name phải khác
+            urlValidate: "validate.php",
+            inputCountFiles: "input1_count",    // input name cho bộ đếm phải khác
+            defaultValidate: true,
+            textUpload: "(click để tải ảnh hoặc kéo thả vào đây)",
+            allowExtension: [{ ext: "jpg",  mime: "image/jpeg" }, { ext: "png", mime: "image/png" }],
+            alertExtension: "Vui lòng chọn file hình png,jpg",
+            alertMaxsize: "File không vượt quá 2MB",
+            maxSize: 10
+        });
+//=========== SERVER UPLOAD 
+        $input1_count       = $this->request->getPost('input1_count'); // input1_count của object inputCountFiles khi khởi tạo
+            for($i=0; $i < $input1_count; $i++)
+            {   
+                echo '<pre>';
+                var_dump($_FILES['image'.$i]);
+                echo '</pre>';
+            }
+            die;
