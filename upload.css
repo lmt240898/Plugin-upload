@@ -167,3 +167,24 @@
     background-color: rgba(0, 0, 0, 0.5);
     z-index: 10;
 }
+
+/* Crop box styles */
+.crop-box {
+    position: absolute;
+    border: 2px dashed white;
+    box-sizing: border-box;
+    cursor: move;
+    z-index: 20;
+    background-repeat: no-repeat;
+}
+
+.resize-handle {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    bottom: 0;
+    right: 0;
+    background: white;
+    cursor: nwse-resize;
+    z-index: 30;
+}
