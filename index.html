@@ -12,20 +12,21 @@
     <script  src="upload.js"></script>
 </head>
 <body>
-    <div>
+    <!-- <div>
         <input type="file" class="file-upload">
-    </div>
+    </div> -->
 
     <div>
-        <input type="file" class="file-upload-multiple">
+        <input type="file" class="file-upload-multiple" multiple>
     </div>
 
     <script>
         $(document).ready(function() {
-            $('.file-upload').Upload()
+            // $('.file-upload').Upload()
             $('.file-upload-multiple').Upload({
                 type: 'multiple',
                 input_name: 'test-multiple',
+                max_images: 4
             })
         });
     </script>
