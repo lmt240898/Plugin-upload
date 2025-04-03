@@ -291,7 +291,7 @@
                 $(document).on('click', '.' + params.className.btn_edit, function(e) {
                     e.stopPropagation();
                     const imageUrl = $(this).closest('.' + params.className.container_image).find('.' + params.className.item_image).attr('src');
-                    common.openModal(imageUrl);
+                    common.openModal(imageUrl, _this);
                 });
             }
 
@@ -314,16 +314,21 @@
             }
         }
 
+        class Multiple {
+
+        }
+
         class Common {
             constructor() {}
             
-            // Function to create and handle the modal editor
-            modalEdit() {
-                // Create modal container
+            openModal(imageUrl, singleInstance) {
+                // Remove any existing modals first
+                const existingModals = document.querySelectorAll('.' + modalClassName.modal);
+                existingModals.forEach(modal => modal.remove());
+                
                 const modal = document.createElement('div');
                 modal.className = modalClassName.modal;
                 
-                // Create modal content
                 const modalContent = document.createElement('div');
                 modalContent.className = modalClassName.modal_content;
                 
@@ -361,12 +366,6 @@
                 const closeButton = document.createElement('span');
                 closeButton.className = modalClassName.close_button;
                 closeButton.innerHTML = '&times;';
-                closeButton.onclick = () => {
-                    modal.classList.remove('show');
-                    setTimeout(() => {
-                        modal.style.display = 'none';
-                    }, 300); 
-                };
                 
                 // Create image container
                 const imageContainer = document.createElement('div');
@@ -382,6 +381,11 @@
                 // Create image element
                 const image = document.createElement('img');
                 image.className = modalClassName.edit_image;
+                image.src = imageUrl;
+                
+                // Track state
+                let cropMode = false;
+                let rotationAngle = 0;
                 
                 // Add image to wrapper and wrapper to container
                 wrapperImage.appendChild(image);
@@ -398,43 +402,28 @@
                 // Add modal to body
                 document.body.appendChild(modal);
                 
-                // Track crop mode and rotation angle
-                let cropMode = false;
-                let rotationAngle = 0;
+                // Show modal with animation
+                modal.style.display = 'block';
+                setTimeout(() => {
+                    modal.classList.add('show');
+                }, 10);
                 
-                // Function to open the modal with an image
-                this.openModal = function(imageUrl) {
-                    image.src = imageUrl;
-                    modal.style.display = 'block';
-                    
-                    // Reset rotation angle and crop mode when opening modal
-                    rotationAngle = 0;
-                    cropMode = false;
-                    image.style.transform = `rotate(${rotationAngle}deg)`;
-                    
-                    // Remove any existing crop elements
-                    const existingOverlay = wrapperImage.querySelector('.crop-overlay');
-                    const existingCropBox = wrapperImage.querySelector('.crop-box');
-                    if (existingOverlay) existingOverlay.remove();
-                    if (existingCropBox) existingCropBox.remove();
-                    
-                    // Enable rotation buttons
-                    rotateLeftButton.disabled = false;
-                    rotateRightButton.disabled = false;
-                    rotateLeftButton.classList.remove('disabled');
-                    rotateRightButton.classList.remove('disabled');
-                    
-                    // Trigger reflow to ensure the transition works
-                    modal.offsetHeight;
-                    
-                    // Add show class to start animation
+                // Close button handler - completely removes the modal
+                closeButton.onclick = () => {
+                    modal.classList.remove('show');
                     setTimeout(() => {
-                        modal.classList.add('show');
-                    }, 10);
+                        modal.remove(); // Remove from DOM completely
+                    }, 300); 
                 };
                 
                 // Add event listeners for edit buttons
                 cropButton.addEventListener('click', function() {
+                    // Don't allow cropping when image is rotated
+                    if (rotationAngle !== 0) {
+                        console.log('Cannot crop rotated image. Please reset rotation first.');
+                        return;
+                    }
+                    
                     console.log('Crop button clicked');
                     
                     // Check if overlay already exists
@@ -461,80 +450,146 @@
                             rotateRightButton.classList.remove('disabled');
                         }
                     } else {
-                        // Create overlay element
-                        overlay = document.createElement('div');
-                        overlay.className = 'crop-overlay';
-                        overlay.style.position = 'absolute';
-                        overlay.style.top = '0';
-                        overlay.style.left = '0';
-                        overlay.style.width = '100%';
-                        overlay.style.height = '100%';
-                        overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-                        overlay.style.zIndex = '10';
+                        // Store original image for restoration later
+                        const originalImageSrc = image.src;
+                        wrapperImage.dataset.originalImage = originalImageSrc;
                         
-                        // Create crop box
-                        cropBox = document.createElement('div');
-                        cropBox.className = 'crop-box';
-                        cropBox.style.position = 'absolute';
-                        cropBox.style.zIndex = '20';
-                        cropBox.style.border = '2px dashed white';
-                        cropBox.style.boxSizing = 'border-box';
-                        
-                        // Set initial size and position (centered, 50% of image size)
-                        const imgRect = image.getBoundingClientRect();
-                        const initialWidth = Math.min(imgRect.width * 0.5, imgRect.height * 0.5);
-                        const initialHeight = initialWidth;
-                        
-                        cropBox.style.width = initialWidth + 'px';
-                        cropBox.style.height = initialHeight + 'px';
-                        cropBox.style.top = ((imgRect.height / 2 - initialHeight / 2) - 45) + 'px';
-                        cropBox.style.left = (imgRect.width / 2 - initialWidth / 2) + 'px';
-                        
-                        // Set background to match the original image
-                        cropBox.style.backgroundImage = `url(${image.src})`;
-                        cropBox.style.backgroundRepeat = 'no-repeat';
-                        
-                        // Create resize handles for all four corners
-                        const cornerPositions = [
-                            { position: 'top-left', cursor: 'nwse-resize', top: '0', left: '0', bottom: 'auto', right: 'auto' },
-                            { position: 'top-right', cursor: 'nesw-resize', top: '0', left: 'auto', bottom: 'auto', right: '0' },
-                            { position: 'bottom-left', cursor: 'nesw-resize', top: 'auto', left: '0', bottom: '0', right: 'auto' },
-                            { position: 'bottom-right', cursor: 'nwse-resize', top: 'auto', left: 'auto', bottom: '0', right: '0' }
-                        ];
-                        
-                        cornerPositions.forEach(corner => {
-                            const resizeHandle = document.createElement('div');
-                            resizeHandle.className = `resize-handle ${corner.position}`;
-                            resizeHandle.style.position = 'absolute';
-                            resizeHandle.style.width = '10px';
-                            resizeHandle.style.height = '10px';
-                            resizeHandle.style.background = 'white';
-                            resizeHandle.style.cursor = corner.cursor;
-                            resizeHandle.style.top = corner.top;
-                            resizeHandle.style.left = corner.left;
-                            resizeHandle.style.bottom = corner.bottom;
-                            resizeHandle.style.right = corner.right;
-                            resizeHandle.dataset.position = corner.position;
+                        // If image is rotated, we need to create a new image with rotation applied
+                        if (rotationAngle !== 0) {
+                            // Create a temporary canvas to generate a rotated image
+                            const tempCanvas = document.createElement('canvas');
+                            const tempCtx = tempCanvas.getContext('2d');
                             
-                            cropBox.appendChild(resizeHandle);
-                        });
+                            // Create temporary image to ensure dimensions are loaded
+                            const tempImg = new Image();
+                            tempImg.src = image.src;
+                            
+                            tempImg.onload = function() {
+                                // Set canvas dimensions based on rotation
+                                if (rotationAngle === 90 || rotationAngle === 270) {
+                                    tempCanvas.width = tempImg.naturalHeight;
+                                    tempCanvas.height = tempImg.naturalWidth;
+                                } else {
+                                    tempCanvas.width = tempImg.naturalWidth;
+                                    tempCanvas.height = tempImg.naturalHeight;
+                                }
+                                
+                                // Rotate and draw
+                                tempCtx.translate(tempCanvas.width / 2, tempCanvas.height / 2);
+                                tempCtx.rotate((rotationAngle * Math.PI) / 180);
+                                
+                                if (rotationAngle === 90 || rotationAngle === 270) {
+                                    tempCtx.drawImage(
+                                        tempImg, 
+                                        -tempImg.naturalWidth / 2, 
+                                        -tempImg.naturalHeight / 2,
+                                        tempImg.naturalWidth, 
+                                        tempImg.naturalHeight
+                                    );
+                                } else {
+                                    tempCtx.drawImage(
+                                        tempImg, 
+                                        -tempImg.naturalWidth / 2, 
+                                        -tempImg.naturalHeight / 2,
+                                        tempImg.naturalWidth, 
+                                        tempImg.naturalHeight
+                                    );
+                                }
+                                
+                                // Store the rotation angle
+                                wrapperImage.dataset.rotationAngle = rotationAngle;
+                                
+                                // Create a new image with rotation applied
+                                const rotatedDataUrl = tempCanvas.toDataURL();
+                                
+                                // Replace the image with rotated one
+                                image.style.transform = ''; // Remove rotation transform
+                                image.src = rotatedDataUrl;
+                                
+                                // Now create the crop elements as usual
+                                createCropElements();
+                            };
+                        } else {
+                            // No rotation, create crop elements directly
+                            createCropElements();
+                        }
                         
-                        // Add elements to wrapper
-                        wrapperImage.appendChild(overlay);
-                        wrapperImage.appendChild(cropBox);
-                        
-                        // Initialize background position
-                        updateCropBoxBackground();
-                        
-                        // Initialize drag and resize functionality
-                        initCropBoxInteraction(cropBox, wrapperImage, image);
-                        
-                        // Set crop mode and disable rotation buttons
-                        cropMode = true;
-                        rotateLeftButton.disabled = true;
-                        rotateRightButton.disabled = true;
-                        rotateLeftButton.classList.add('disabled');
-                        rotateRightButton.classList.add('disabled');
+                        function createCropElements() {
+                            // Create overlay element
+                            overlay = document.createElement('div');
+                            overlay.className = 'crop-overlay';
+                            overlay.style.position = 'absolute';
+                            overlay.style.top = '0';
+                            overlay.style.left = '0';
+                            overlay.style.width = '100%';
+                            overlay.style.height = '100%';
+                            overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+                            overlay.style.zIndex = '10';
+                            
+                            // Create crop box
+                            cropBox = document.createElement('div');
+                            cropBox.className = 'crop-box';
+                            cropBox.style.position = 'absolute';
+                            cropBox.style.zIndex = '20';
+                            cropBox.style.border = '2px dashed white';
+                            cropBox.style.boxSizing = 'border-box';
+                            
+                            // Set initial size and position (centered, 50% of image size)
+                            const imgRect = image.getBoundingClientRect();
+                            const initialWidth = Math.min(imgRect.width * 0.5, imgRect.height * 0.5);
+                            const initialHeight = initialWidth;
+                            
+                            cropBox.style.width = initialWidth + 'px';
+                            cropBox.style.height = initialHeight + 'px';
+                            cropBox.style.top = ((imgRect.height / 2 - initialHeight / 2) - 45) + 'px';
+                            cropBox.style.left = (imgRect.width / 2 - initialWidth / 2) + 'px';
+                            
+                            // Set background to match the current image
+                            cropBox.style.backgroundImage = `url(${image.src})`;
+                            cropBox.style.backgroundRepeat = 'no-repeat';
+                            
+                            // Create resize handles for all four corners
+                            const cornerPositions = [
+                                { position: 'top-left', cursor: 'nwse-resize', top: '0', left: '0', bottom: 'auto', right: 'auto' },
+                                { position: 'top-right', cursor: 'nesw-resize', top: '0', left: 'auto', bottom: 'auto', right: '0' },
+                                { position: 'bottom-left', cursor: 'nesw-resize', top: 'auto', left: '0', bottom: '0', right: 'auto' },
+                                { position: 'bottom-right', cursor: 'nwse-resize', top: 'auto', left: 'auto', bottom: '0', right: '0' }
+                            ];
+                            
+                            cornerPositions.forEach(corner => {
+                                const resizeHandle = document.createElement('div');
+                                resizeHandle.className = `resize-handle ${corner.position}`;
+                                resizeHandle.style.position = 'absolute';
+                                resizeHandle.style.width = '10px';
+                                resizeHandle.style.height = '10px';
+                                resizeHandle.style.background = 'white';
+                                resizeHandle.style.cursor = corner.cursor;
+                                resizeHandle.style.top = corner.top;
+                                resizeHandle.style.left = corner.left;
+                                resizeHandle.style.bottom = corner.bottom;
+                                resizeHandle.style.right = corner.right;
+                                resizeHandle.dataset.position = corner.position;
+                                
+                                cropBox.appendChild(resizeHandle);
+                            });
+                            
+                            // Add elements to wrapper
+                            wrapperImage.appendChild(overlay);
+                            wrapperImage.appendChild(cropBox);
+                            
+                            // Initialize background position
+                            updateCropBoxBackground();
+                            
+                            // Initialize drag and resize functionality
+                            initCropBoxInteraction(cropBox, wrapperImage, image);
+                            
+                            // Set crop mode and disable rotation buttons
+                            cropMode = true;
+                            rotateLeftButton.disabled = true;
+                            rotateRightButton.disabled = true;
+                            rotateLeftButton.classList.add('disabled');
+                            rotateRightButton.classList.add('disabled');
+                        }
                     }
                 });
                 
@@ -554,153 +609,162 @@
                     cropBox.style.backgroundSize = `${imgRect.width}px ${imgRect.height}px`;
                 }
                 
-                // Function to initialize crop box interaction
+                // Placeholder for crop box interaction function - to be implemented
                 function initCropBoxInteraction(cropBox, wrapperImage, image) {
+                    // Variables to track dragging state
                     let isDragging = false;
                     let isResizing = false;
-                    let activeHandle = null;
+                    let currentResizeHandle = null;
                     let startX, startY;
-                    let startLeft, startTop, startWidth, startHeight;
+                    let startTop, startLeft, startWidth, startHeight;
                     
-                    // Handle dragging the crop box
+                    // Event listeners for drag functionality
                     cropBox.addEventListener('mousedown', function(e) {
-                        if (e.target.classList.contains('resize-handle')) {
-                            return; // Skip if clicking on resize handle
-                        }
+                        // Ignore if clicked on a resize handle
+                        if (e.target.classList.contains('resize-handle')) return;
+                        
                         isDragging = true;
                         startX = e.clientX;
                         startY = e.clientY;
-                        startLeft = parseInt(window.getComputedStyle(cropBox).left, 10);
-                        startTop = parseInt(window.getComputedStyle(cropBox).top, 10);
+                        startTop = parseInt(cropBox.style.top) || 0;
+                        startLeft = parseInt(cropBox.style.left) || 0;
+                        
                         e.preventDefault();
                     });
                     
-                    // Handle resizing with resize handles
+                    // Event listeners for resize handles
                     const resizeHandles = cropBox.querySelectorAll('.resize-handle');
                     resizeHandles.forEach(handle => {
                         handle.addEventListener('mousedown', function(e) {
                             isResizing = true;
-                            activeHandle = handle.dataset.position;
+                            currentResizeHandle = handle.dataset.position;
                             startX = e.clientX;
                             startY = e.clientY;
-                            startWidth = parseInt(window.getComputedStyle(cropBox).width, 10);
-                            startHeight = parseInt(window.getComputedStyle(cropBox).height, 10);
-                            startLeft = parseInt(window.getComputedStyle(cropBox).left, 10);
-                            startTop = parseInt(window.getComputedStyle(cropBox).top, 10);
-                            e.stopPropagation();
+                            startTop = parseInt(cropBox.style.top) || 0;
+                            startLeft = parseInt(cropBox.style.left) || 0;
+                            startWidth = parseInt(cropBox.style.width) || cropBox.clientWidth;
+                            startHeight = parseInt(cropBox.style.height) || cropBox.clientHeight;
+                            
                             e.preventDefault();
+                            e.stopPropagation(); // Prevent triggering the cropBox mousedown
                         });
                     });
                     
-                    // Handle mouse movement for both dragging and resizing
+                    // Event listener for mouse move (handles both drag and resize)
                     document.addEventListener('mousemove', function(e) {
+                        // Handle drag
                         if (isDragging) {
-                            const dx = e.clientX - startX;
-                            const dy = e.clientY - startY;
-                            let newLeft = startLeft + dx;
-                            let newTop = startTop + dy;
+                            const diffX = e.clientX - startX;
+                            const diffY = e.clientY - startY;
                             
-                            // Constrain within image boundaries
+                            // Calculate new position
+                            let newTop = startTop + diffY;
+                            let newLeft = startLeft + diffX;
+                            
+                            // Get image boundaries
                             const imgRect = image.getBoundingClientRect();
-                            const cropRect = cropBox.getBoundingClientRect();
+                            const wrapperRect = wrapperImage.getBoundingClientRect();
+                            const cropBoxRect = cropBox.getBoundingClientRect();
                             
-                            const maxLeft = imgRect.width - cropRect.width;
-                            const maxTop = imgRect.height - cropRect.height;
+                            // Constrain movement within the image bounds
+                            if (newLeft < 0) newLeft = 0;
+                            if (newTop < 0) newTop = 0;
                             
-                            newLeft = Math.max(0, Math.min(newLeft, maxLeft));
-                            newTop = Math.max(0, Math.min(newTop, maxTop));
+                            const maxLeft = imgRect.width - cropBoxRect.width;
+                            const maxTop = imgRect.height - cropBoxRect.height;
                             
-                            cropBox.style.left = newLeft + 'px';
+                            if (newLeft > maxLeft) newLeft = maxLeft;
+                            if (newTop > maxTop) newTop = maxTop;
+                            
+                            // Apply new position
                             cropBox.style.top = newTop + 'px';
+                            cropBox.style.left = newLeft + 'px';
+                            
+                            // Update background position to show the proper part of the image
                             updateCropBoxBackground();
                         }
-                        
-                        if (isResizing && activeHandle) {
-                            const dx = e.clientX - startX;
-                            const dy = e.clientY - startY;
-                            let newWidth = startWidth;
-                            let newHeight = startHeight;
-                            let newLeft = startLeft;
-                            let newTop = startTop;
+                        // Handle resize
+                        else if (isResizing) {
+                            const diffX = e.clientX - startX;
+                            const diffY = e.clientY - startY;
+                            let newTop = startTop, newLeft = startLeft;
+                            let newWidth = startWidth, newHeight = startHeight;
                             
-                            // Handle resizing differently based on which corner is being dragged
-                            switch (activeHandle) {
+                            // Handle different resize corners
+                            switch (currentResizeHandle) {
                                 case 'top-left':
-                                    newWidth = startWidth - dx;
-                                    newHeight = startHeight - dy;
-                                    newLeft = startLeft + dx;
-                                    newTop = startTop + dy;
+                                    newTop = startTop + diffY;
+                                    newLeft = startLeft + diffX;
+                                    newWidth = startWidth - diffX;
+                                    newHeight = startHeight - diffY;
                                     break;
                                 case 'top-right':
-                                    newWidth = startWidth + dx;
-                                    newHeight = startHeight - dy;
-                                    newTop = startTop + dy;
+                                    newTop = startTop + diffY;
+                                    newWidth = startWidth + diffX;
+                                    newHeight = startHeight - diffY;
                                     break;
                                 case 'bottom-left':
-                                    newWidth = startWidth - dx;
-                                    newHeight = startHeight + dy;
-                                    newLeft = startLeft + dx;
+                                    newLeft = startLeft + diffX;
+                                    newWidth = startWidth - diffX;
+                                    newHeight = startHeight + diffY;
                                     break;
                                 case 'bottom-right':
-                                    newWidth = startWidth + dx;
-                                    newHeight = startHeight + dy;
+                                    newWidth = startWidth + diffX;
+                                    newHeight = startHeight + diffY;
                                     break;
                             }
                             
-                            // Minimum size constraints
-                            if (newWidth < 50) {
-                                if (activeHandle === 'top-left' || activeHandle === 'bottom-left') {
-                                    newLeft = startLeft + startWidth - 50;
-                                }
-                                newWidth = 50;
-                            }
+                            // Enforce minimum dimensions
+                            const minSize = 20;
+                            if (newWidth < minSize) newWidth = minSize;
+                            if (newHeight < minSize) newHeight = minSize;
                             
-                            if (newHeight < 50) {
-                                if (activeHandle === 'top-left' || activeHandle === 'top-right') {
-                                    newTop = startTop + startHeight - 50;
-                                }
-                                newHeight = 50;
-                            }
-                            
-                            // Maximum size and position constraints
+                            // Get image boundaries
                             const imgRect = image.getBoundingClientRect();
                             
-                            // Ensure crop box stays within image bounds
-                            if (newLeft < 0) {
-                                if (activeHandle === 'top-left' || activeHandle === 'bottom-left') {
-                                    newWidth = startWidth + startLeft;
-                                }
-                                newLeft = 0;
-                            }
-                            
-                            if (newTop < 0) {
-                                if (activeHandle === 'top-left' || activeHandle === 'top-right') {
-                                    newHeight = startHeight + startTop;
-                                }
-                                newTop = 0;
-                            }
+                            // Constrain within image bounds
+                            if (newTop < 0) newTop = 0;
+                            if (newLeft < 0) newLeft = 0;
                             
                             if (newLeft + newWidth > imgRect.width) {
-                                newWidth = imgRect.width - newLeft;
+                                if (currentResizeHandle.includes('left')) {
+                                    newLeft = imgRect.width - newWidth;
+                                } else {
+                                    newWidth = imgRect.width - newLeft;
+                                }
                             }
                             
                             if (newTop + newHeight > imgRect.height) {
-                                newHeight = imgRect.height - newTop;
+                                if (currentResizeHandle.includes('top')) {
+                                    newTop = imgRect.height - newHeight;
+                                } else {
+                                    newHeight = imgRect.height - newTop;
+                                }
                             }
                             
+                            // Apply new dimensions and position
+                            cropBox.style.top = newTop + 'px';
+                            cropBox.style.left = newLeft + 'px';
                             cropBox.style.width = newWidth + 'px';
                             cropBox.style.height = newHeight + 'px';
-                            cropBox.style.left = newLeft + 'px';
-                            cropBox.style.top = newTop + 'px';
+                            
+                            // Update background position to show the proper part of the image
                             updateCropBoxBackground();
                         }
                     });
                     
-                    // Handle mouse up to stop dragging or resizing
+                    // Event listener for mouse up (stop drag or resize)
                     document.addEventListener('mouseup', function() {
                         isDragging = false;
                         isResizing = false;
-                        activeHandle = null;
+                        currentResizeHandle = null;
+                    });
+                    
+                    // Event listener for mouse leave (stop drag or resize)
+                    document.addEventListener('mouseleave', function() {
+                        isDragging = false;
+                        isResizing = false;
+                        currentResizeHandle = null;
                     });
                 }
                 
@@ -712,6 +776,15 @@
                     if (rotationAngle < 0) rotationAngle += 360;
                     image.style.transform = `rotate(${rotationAngle}deg)`;
                     console.log('Rotated left to:', rotationAngle);
+                    
+                    // Disable crop button when image is rotated
+                    if (rotationAngle !== 0) {
+                        cropButton.disabled = true;
+                        cropButton.classList.add('disabled');
+                    } else {
+                        cropButton.disabled = false;
+                        cropButton.classList.remove('disabled');
+                    }
                 });
                 
                 // Rotate right 90 degrees
@@ -722,6 +795,15 @@
                     if (rotationAngle >= 360) rotationAngle -= 360;
                     image.style.transform = `rotate(${rotationAngle}deg)`;
                     console.log('Rotated right to:', rotationAngle);
+                    
+                    // Disable crop button when image is rotated
+                    if (rotationAngle !== 0) {
+                        cropButton.disabled = true;
+                        cropButton.classList.add('disabled');
+                    } else {
+                        cropButton.disabled = false;
+                        cropButton.classList.remove('disabled');
+                    }
                 });
                 
                 // Save the edited image
@@ -730,53 +812,61 @@
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
                     
-                    // Get original image dimensions
+                    // Get original image dimensions and source
                     const originalImage = new Image();
-                    originalImage.src = image.src;
+                    originalImage.src = wrapperImage.dataset.originalImage || image.src;
                     
                     // Need to ensure image is loaded for canvas operations
                     originalImage.onload = function() {
-                        let resultWidth, resultHeight;
-                        
-                        // Handle rotation cases where we need to swap dimensions
-                        if (rotationAngle === 90 || rotationAngle === 270) {
-                            resultWidth = originalImage.height;
-                            resultHeight = originalImage.width;
-                        } else {
-                            resultWidth = originalImage.width;
-                            resultHeight = originalImage.height;
-                        }
-                        
-                        // If cropping, calculate dimensions and position
+                        // If we're in crop mode, apply the crop
                         if (cropMode) {
                             const cropBox = wrapperImage.querySelector('.crop-box');
                             if (cropBox) {
                                 const imgRect = image.getBoundingClientRect();
                                 const cropRect = cropBox.getBoundingClientRect();
                                 
-                                // Calculate crop dimensions relative to original image
-                                const scaleX = originalImage.width / imgRect.width;
-                                const scaleY = originalImage.height / imgRect.height;
+                                // Calculate crop dimensions relative to displayed image
+                                const scaleX = image.naturalWidth / imgRect.width;
+                                const scaleY = image.naturalHeight / imgRect.height;
                                 
                                 const cropLeft = (cropRect.left - imgRect.left) * scaleX;
                                 const cropTop = (cropRect.top - imgRect.top) * scaleY;
                                 const cropWidth = cropRect.width * scaleX;
                                 const cropHeight = cropRect.height * scaleY;
                                 
-                                // Set canvas to crop size
-                                canvas.width = cropWidth;
-                                canvas.height = cropHeight;
+                                // Create a temporary image from the current displayed image (which may be already rotated)
+                                const currentImage = new Image();
+                                currentImage.src = image.src;
                                 
-                                // Draw only the cropped portion
-                                ctx.drawImage(
-                                    originalImage, 
-                                    cropLeft, cropTop, cropWidth, cropHeight, 
-                                    0, 0, cropWidth, cropHeight
-                                );
+                                currentImage.onload = function() {
+                                    // Set canvas to crop size
+                                    canvas.width = cropWidth;
+                                    canvas.height = cropHeight;
+                                    
+                                    // Draw only the cropped portion
+                                    ctx.drawImage(
+                                        currentImage, 
+                                        cropLeft, cropTop, cropWidth, cropHeight, 
+                                        0, 0, cropWidth, cropHeight
+                                    );
+                                    
+                                    completeImageProcessing();
+                                };
                             }
                         }
                         // If only rotating (no crop)
                         else if (rotationAngle !== 0) {
+                            let resultWidth, resultHeight;
+                            
+                            // Handle rotation cases where we need to swap dimensions
+                            if (rotationAngle === 90 || rotationAngle === 270) {
+                                resultWidth = originalImage.naturalHeight;
+                                resultHeight = originalImage.naturalWidth;
+                            } else {
+                                resultWidth = originalImage.naturalWidth;
+                                resultHeight = originalImage.naturalHeight;
+                            }
+                            
                             canvas.width = resultWidth;
                             canvas.height = resultHeight;
                             
@@ -788,53 +878,97 @@
                             if (rotationAngle === 90 || rotationAngle === 270) {
                                 ctx.drawImage(
                                     originalImage, 
-                                    -originalImage.height / 2, 
-                                    -originalImage.width / 2,
-                                    originalImage.height,
-                                    originalImage.width
+                                    -originalImage.naturalWidth / 2, 
+                                    -originalImage.naturalHeight / 2,
+                                    originalImage.naturalWidth,
+                                    originalImage.naturalHeight
                                 );
                             } else {
                                 ctx.drawImage(
                                     originalImage, 
-                                    -originalImage.width / 2, 
-                                    -originalImage.height / 2,
-                                    originalImage.width,
-                                    originalImage.height
+                                    -originalImage.naturalWidth / 2, 
+                                    -originalImage.naturalHeight / 2,
+                                    originalImage.naturalWidth,
+                                    originalImage.naturalHeight
                                 );
                             }
+                            
+                            completeImageProcessing();
                         }
                         // No edits, just copy the original
                         else {
-                            canvas.width = originalImage.width;
-                            canvas.height = originalImage.height;
+                            canvas.width = originalImage.naturalWidth;
+                            canvas.height = originalImage.naturalHeight;
                             ctx.drawImage(originalImage, 0, 0);
+                            completeImageProcessing();
                         }
                         
-                        // Convert canvas to data URL and update original image
-                        const dataURL = canvas.toDataURL('image/png');
-                        
-                        // Find all item_image instances and update the one that matches our current source
-                        const itemImages = document.querySelectorAll('.' + params.className.item_image);
-                        itemImages.forEach(img => {
-                            if (img.src === originalImage.src) {
-                                img.src = dataURL;
+                        // Function to complete the image processing and close modal
+                        function completeImageProcessing() {
+                            // Convert canvas to data URL
+                            const dataURL = canvas.toDataURL('image/png');
+                            
+                            // Find all item_image instances and update the one that matches our original source
+                            const itemImages = document.querySelectorAll('.' + params.className.item_image);
+                            itemImages.forEach(img => {
+                                if (img.src === originalImage.src) {
+                                    img.src = dataURL;
+                                }
+                            });
+                            
+                            // NEW CODE: Update the input file with the edited image
+                            if (singleInstance && singleInstance.selector) {
+                                // Convert the dataURL to a Blob
+                                const binaryString = atob(dataURL.split(',')[1]);
+                                const len = binaryString.length;
+                                const bytes = new Uint8Array(len);
+                                
+                                for (let i = 0; i < len; i++) {
+                                    bytes[i] = binaryString.charCodeAt(i);
+                                }
+                                
+                                const blob = new Blob([bytes.buffer], { type: 'image/png' });
+                                
+                                // Get the original filename or generate a new one
+                                const originalFileName = singleInstance.file ? singleInstance.file.name : "edited-image.png";
+                                const fileNameParts = originalFileName.split('.');
+                                const fileExt = fileNameParts.pop();
+                                const fileName = fileNameParts.join('.') + "-edited." + fileExt;
+                                
+                                // Create a new File from the Blob
+                                const newFile = new File([blob], fileName, {
+                                    type: 'image/png',
+                                    lastModified: new Date().getTime()
+                                });
+                                
+                                // Use DataTransfer to set the files property of the input
+                                try {
+                                    const dataTransfer = new DataTransfer();
+                                    dataTransfer.items.add(newFile);
+                                    
+                                    // Update the file input
+                                    singleInstance.selector.files = dataTransfer.files;
+                                    
+                                    // Also update the file property in the Single instance
+                                    singleInstance.file = newFile;
+                                } catch (error) {
+                                    console.error('Error updating file input:', error);
+                                }
                             }
-                        });
-                        
-                        // Close the modal
-                        modal.classList.remove('show');
-                        setTimeout(() => {
-                            modal.style.display = 'none';
-                        }, 300);
+                            
+                            // Close and remove the modal
+                            modal.classList.remove('show');
+                            setTimeout(() => {
+                                modal.remove();
+                            }, 300);
+                        }
                     };
                 });
             }
         }
 
-        // Create single instance of Common class
+        // Init common
         const common = new Common();
-        // Initialize the modal editor
-        common.modalEdit();
 
         // Object function
         const functions = {

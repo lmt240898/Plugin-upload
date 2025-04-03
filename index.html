@@ -16,9 +16,17 @@
         <input type="file" class="file-upload">
     </div>
 
+    <div>
+        <input type="file" class="file-upload-multiple">
+    </div>
+
     <script>
         $(document).ready(function() {
             $('.file-upload').Upload()
+            $('.file-upload-multiple').Upload({
+                type: 'multiple',
+                input_name: 'test-multiple',
+            })
         });
     </script>
 </body>
