@@ -19,7 +19,7 @@
             type: 'single',
             server_url_validate: '',
             allow_ext: [{ ext: 'jpg', mime: 'image/jpeg' }, { ext: 'png', mime: 'image/png' }],
-            text_upload: '<p>Drag and drop or select files </p> <p>(.jpg, .png and max size 2mb)</p> ',
+            text_upload: '<p >Drag and drop or select files </p> <p>(.jpg, .png and max size 2mb)</p> ',
             alert_ext: "Invalid file extension",
             alert_same_file: "Invalid files",
             alert_max_file_size: "File size exceeds limit",
@@ -407,7 +407,8 @@
                     this.handleMessageUpload('Invalid files');
                     return;
                 }
-
+                console.log('validFiles');
+                console.log(validFiles);
                 this.files = validFiles;
                 this.createBoxImages();
 
@@ -424,7 +425,7 @@
 
                 // Add wrapper to container
                 $(this.containerImage).append(this.imageWrapper);
-
+             
                 // Create a box for each file
                 for (let i = 0; i < this.files.length; i++) {
                     const file = this.files[i];
@@ -593,7 +594,6 @@
 
                 // add event for drag and drop
                 let getDropare = $(_this.selector).parent('div').find('.' + params.className.detect);
-                console.log(getDropare);
                 $(getDropare).each((key, obj) => {
                     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evtName => {
                         obj.addEventListener(evtName, (e) => e.preventDefault());
