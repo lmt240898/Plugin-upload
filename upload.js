@@ -276,16 +276,59 @@
                 var _this = this;
                 $(document).on('click', '.' + params.className.btn_remove, function (e) {
                     e.stopPropagation();
+                    
+                    // Check if there's an ID in the remove button or the image
+                    const $removeBtn = $(this);
+                    const imageId = $removeBtn.data('id') || 
+                                    $removeBtn.closest('.' + params.className.container_image)
+                                             .find('.' + params.className.item_image)
+                                             .data('id');
+                    
                     Swal.fire({
                         title: 'Do you want to delete?',
-                        type: "warning",
+                        icon: "warning",
                         showCancelButton: true,
                         confirmButtonColor: "#3085d6",
                         confirmButtonText: "OK"
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            $(_this.selector).parent('div').find('.' + params.className.box_image).remove();
-                            _this.messageUpload();
+                            // If ID exists, we need to handle server removal
+                            if (imageId) {
+                                // Construct API URL based on whether server_url exists
+                                let apiUrl = params.endpoint_remove;
+                                
+                                // If server_url is provided, combine it with endpoint
+                                if (params.server_url) {
+                                    // Check if server_url ends with a slash and format accordingly
+                                    if (params.server_url.charAt(params.server_url.length - 1) !== '/') {
+                                        apiUrl = params.server_url + '/' + params.endpoint_remove;
+                                    } else {
+                                        apiUrl = params.server_url + params.endpoint_remove;
+                                    }
+                                }
+                                
+                                // Make AJAX request to remove image
+                                $.ajax({
+                                    url: apiUrl,
+                                    method: 'POST',
+                                    data: { id: imageId },
+                                    success: function(response) {
+                                        // Remove from DOM on success
+                                        $(_this.selector).parent('div').find('.' + params.className.box_image).remove();
+                                        _this.messageUpload();
+                                        
+                                        Swal.fire('Deleted!', 'The image has been deleted.', 'success');
+                                    },
+                                    error: function(xhr, status, error) {
+                                        Swal.fire('Error!', 'Failed to delete image from server.', 'error');
+                                        console.error('Error deleting image:', error);
+                                    }
+                                });
+                            } else {
+                                // No ID, just remove from DOM (local file)
+                                $(_this.selector).parent('div').find('.' + params.className.box_image).remove();
+                                _this.messageUpload();
+                            }
                         }
                     });
                 });
@@ -301,12 +344,35 @@
                 });
             }
 
+            // Load existing image from input element with class 'image-exist'
+            loadExistingImage() {
+                const existingImage = $(this.parentSelector).find('.image-exist');
+                if (existingImage.length === 0) return;
+
+                // Get image URL and ID from data attributes
+                const imageUrl = $(existingImage).data('image');
+                const imageId = $(existingImage).data('id');
+                
+                if (imageUrl) {
+                    // Create box image
+                    this.createBoxImage();
+                    
+                    // Set the source of the image
+                    $(this.elmImage).attr('src', imageUrl);
+                    
+                    // Store the ID for server operations if needed
+                    $(this.elmImage).data('id', imageId);
+                }
+            }
+
             // set init function for single
             init() {
                 // create container upload
                 this.container();
                 // create mess explain upload like: "Drag and drop or select files"
                 this.messageUpload();
+                // Load existing image from HTML
+                this.loadExistingImage();
                 // call trigger click upload
                 this.triggerClickUpload();
                 // call trigger drag file
