@@ -496,16 +496,31 @@
 
                 // Add wrapper to container
                 $(this.containerImage).append(this.imageWrapper);
-             
-                // Create a box for each file
-                for (let i = 0; i < this.files.length; i++) {
-                    const file = this.files[i];
-                    this.createSingleImageBox(file, null, i);
+                
+                // Track the current index for naming inputs
+                let currentIndex = 0;
+                
+                // Add server images first
+                for (let serverImage of this.serverImages) {
+                    // Create box for server image
+                    this.createServerImageBox(serverImage.url, serverImage.id, serverImage.inputElement);
+                    
+                    // Update any input names to ensure sequential numbering
+                    const boxImage = $(this.imageWrapper).children().last();
+                    const input = boxImage.find('input');
+                    
+                    if (input.length > 0) {
+                        input.attr('name', `${params.input_name}[${currentIndex}]`);
+                    }
+                    
+                    currentIndex++;
                 }
                 
-                // Re-add server images
-                for (let serverImage of this.serverImages) {
-                    this.createServerImageBox(serverImage.url, serverImage.id);
+                // Create a box for each new file
+                for (let i = 0; i < this.files.length; i++) {
+                    const file = this.files[i];
+                    this.createSingleImageBox(file, null, currentIndex);
+                    currentIndex++;
                 }
             }
 
@@ -548,7 +563,7 @@
             }
 
             // Create a box for server images
-            createServerImageBox(imageUrl, imageId) {
+            createServerImageBox(imageUrl, imageId, inputElement = null) {
                 // Create box
                 const boxImage = document.createElement("DIV");
                 boxImage.className = params.className.box_image;
@@ -557,9 +572,28 @@
                 const elmImage = document.createElement("img");
                 elmImage.className = params.className.item_image;
                 elmImage.src = imageUrl;
+                elmImage.dataset.id = imageId;
 
                 // Add image to box
                 $(boxImage).append(elmImage);
+                
+                // If an input element was provided, create a clone with updated properties
+                if (inputElement) {
+                    const hiddenInput = document.createElement("input");
+                    hiddenInput.type = "hidden";
+                    hiddenInput.name = `${params.input_name}[${this.serverImages.length - 1}]`;
+                    hiddenInput.value = imageId;
+                    hiddenInput.dataset.serverImage = "true";
+                    $(boxImage).append(hiddenInput);
+                } else {
+                    // Create a hidden input for server images
+                    const hiddenInput = document.createElement("input");
+                    hiddenInput.type = "hidden";
+                    hiddenInput.name = `${params.input_name}[${this.serverImages.length - 1}]`;
+                    hiddenInput.value = imageId;
+                    hiddenInput.dataset.serverImage = "true";
+                    $(boxImage).append(hiddenInput);
+                }
 
                 // Add box to wrapper
                 $(this.imageWrapper).append(boxImage);
@@ -674,9 +708,12 @@
                         if (params.server_url.charAt(params.server_url.length - 1) !== '/') {
                             apiUrl = params.server_url + '/' + params.endpoint_remove;
                         } else {
-                            apiUrl = params.server_url + params.endpoint_remove;
+                            
                         }
                     }
+
+                    // Store reference to this for use in callbacks
+                    const _this = this;
 
                     // Ask for confirmation before deleting
                     Swal.fire({
@@ -693,16 +730,19 @@
                                 method: 'POST',
                                 data: { id: imageId },
                                 success: function(response) {
-                                    // Remove from DOM
-                                    boxImage.remove();
-                                    
                                     // Remove from serverImages array
                                     _this.serverImages = _this.serverImages.filter(img => img.id !== imageId);
+                                    
+                                    // Remove from DOM
+                                    boxImage.remove();
                                     
                                     // Check if there are any images left
                                     const remainingImages = $(_this.containerImage).find('.' + params.className.box_image);
                                     if (remainingImages.length === 0) {
                                         _this.messageUpload();
+                                    } else {
+                                        // Re-render all images to update indices
+                                        _this.createBoxImages();
                                     }
                                     
                                     Swal.fire('Deleted!', 'The image has been deleted.', 'success');
@@ -715,7 +755,9 @@
                         }
                     });
                 } else {
-                    // Handle non-server image removal (existing functionality)
+                    // Handle non-server image removal
+                    const _this = this;
+                    
                     Swal.fire({
                         title: 'Do you want to delete this image?',
                         icon: "warning",
@@ -751,6 +793,9 @@
                                 const remainingImages = $(this.containerImage).find('.' + params.className.box_image);
                                 if (remainingImages.length === 0) {
                                     this.messageUpload();
+                                } else {
+                                    // Re-render to ensure indices are sequential
+                                    this.createBoxImages();
                                 }
                             }
                         }
@@ -844,13 +889,17 @@
                     if (imageUrl) {
                         this.serverImages.push({
                             id: imageId,
-                            url: imageUrl
+                            url: imageUrl,
+                            inputElement: el
                         });
                         
-                        // Create box for server image
-                        this.createServerImageBox(imageUrl, imageId);
+                        // Create box for server image and pass the input element
+                        this.createServerImageBox(imageUrl, imageId, el);
                     }
                 });
+
+                // Remove all original image-exist inputs after processing
+                existingImages.remove();
             }
 
             // set init function for single
